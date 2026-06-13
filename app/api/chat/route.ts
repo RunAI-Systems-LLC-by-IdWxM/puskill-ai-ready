@@ -1,6 +1,7 @@
 import { streamText } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { getBrandLegalSystemContext } from '@/lib/brand-config';
+import { getOpenAIApiKey } from '@/lib/openai-api-key';
 import { PUSKILL_MASTER_DOCUMENT } from '@/lib/pmd';
 import { getTGhosTMinDPersonaContext } from '@/lib/tghostmind-persona';
 
@@ -14,12 +15,6 @@ const TGhosTMinD_SYSTEM_PROMPT = [
   PUSKILL_MASTER_DOCUMENT,
   getBrandLegalSystemContext(),
 ].join(PROMPT_SEPARATOR);
-
-const API_KEY_ENV = 'puskill-ai-ready_API_KEY';
-
-const openai = createOpenAI({
-  apiKey: process.env[API_KEY_ENV],
-});
 
 const VALID_ROLES = new Set(['user', 'assistant', 'system'] as const);
 
@@ -95,12 +90,16 @@ export async function POST(req: Request) {
     );
   }
 
-  if (!process.env[API_KEY_ENV]) {
+  const apiKey = getOpenAIApiKey();
+
+  if (!apiKey) {
     return new Response(JSON.stringify({ error: 'Service unavailable' }), {
       status: 503,
       headers: { 'Content-Type': 'application/json' },
     });
   }
+
+  const openai = createOpenAI({ apiKey });
 
   const result = streamText({
     model: openai('gpt-4o-mini'),

@@ -130,8 +130,16 @@ function StopIcon() {
 }
 
 export default function Home() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading, stop, setMessages } =
-    useChat({ api: '/api/chat' });
+  const {
+    messages,
+    input,
+    handleInputChange,
+    handleSubmit,
+    isLoading,
+    stop,
+    setMessages,
+    error,
+  } = useChat({ api: '/api/chat' });
 
   const placeholder = useTypewriterPlaceholder(PLACEHOLDERS);
   const scrollImages = [...HARDWARE_IMAGES, ...HARDWARE_IMAGES];
@@ -244,6 +252,15 @@ export default function Home() {
                     <span className="h-2 w-2 animate-bounce rounded-full bg-zinc-500 [animation-delay:-0.15s]" />
                     <span className="h-2 w-2 animate-bounce rounded-full bg-zinc-500" />
                   </div>
+                </div>
+              )}
+
+              {error && (
+                <div className="flex justify-start">
+                  <p className="max-w-[85%] rounded-3xl border border-red-500/30 bg-red-950/40 px-5 py-3 text-sm text-red-200">
+                    O motor cognitivo está indisponível no momento. Tente novamente em
+                    instantes.
+                  </p>
                 </div>
               )}
 
