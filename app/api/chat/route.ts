@@ -1,8 +1,14 @@
 import { streamText } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { createOpenAI } from '@ai-sdk/openai';
 import { BRAND_KNOWLEDGE } from '@/lib/knowledge-base';
 
 export const runtime = 'edge';
+
+const API_KEY_ENV = 'puskill-ai-ready_API_KEY';
+
+const openai = createOpenAI({
+  apiKey: process.env[API_KEY_ENV],
+});
 
 const VALID_ROLES = new Set(['user', 'assistant', 'system'] as const);
 
@@ -76,6 +82,13 @@ export async function POST(req: Request) {
         headers: { 'Content-Type': 'application/json' },
       },
     );
+  }
+
+  if (!process.env[API_KEY_ENV]) {
+    return new Response(JSON.stringify({ error: 'Service unavailable' }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   const result = streamText({
