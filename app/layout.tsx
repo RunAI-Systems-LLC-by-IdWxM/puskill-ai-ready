@@ -18,6 +18,12 @@ export const metadata: Metadata = {
     'Landing page PUSKILL com TGhosT — inteligência cognitiva para hardware AI Ready.',
 };
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{

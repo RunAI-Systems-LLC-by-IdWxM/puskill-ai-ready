@@ -176,6 +176,39 @@ export default function Home() {
     textarea.style.height = `${Math.min(textarea.scrollHeight, 132)}px`;
   }, [input]);
 
+  useEffect(() => {
+    const root = document.getElementById('app-root');
+    const viewport = window.visualViewport;
+    if (!root || !viewport) return;
+
+    const isMobileLock =
+      window.matchMedia('(max-width: 639px)').matches ||
+      window.matchMedia('(orientation: landscape) and (max-height: 500px)').matches;
+
+    if (!isMobileLock) return;
+
+    const syncViewport = () => {
+      const keyboardOpen = viewport.height < window.innerHeight - 80;
+      if (keyboardOpen) {
+        root.style.height = `${viewport.height}px`;
+        root.style.top = `${viewport.offsetTop}px`;
+      } else {
+        root.style.height = '';
+        root.style.top = '';
+      }
+    };
+
+    viewport.addEventListener('resize', syncViewport);
+    viewport.addEventListener('scroll', syncViewport);
+
+    return () => {
+      viewport.removeEventListener('resize', syncViewport);
+      viewport.removeEventListener('scroll', syncViewport);
+      root.style.height = '';
+      root.style.top = '';
+    };
+  }, []);
+
   function handleFileSelect(event: React.ChangeEvent<HTMLInputElement>) {
     if (!event.target.files?.length) return;
     // Upload pipeline — arquivos selecionados via + (imagens, vídeos, PDF)
@@ -187,7 +220,10 @@ export default function Home() {
   }
 
   return (
-    <div className="mobile-root relative flex h-dvh min-h-0 flex-col overflow-hidden bg-black max-sm:w-full max-sm:max-w-full max-sm:overflow-x-hidden">
+    <div
+      id="app-root"
+      className="mobile-root relative flex h-dvh min-h-0 flex-col overflow-hidden bg-black max-sm:fixed max-sm:inset-0 max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:w-full max-sm:max-w-[100vw]"
+    >
       <div className="absolute inset-0 overflow-hidden">
         <div className="animate-scroll grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 md:grid-cols-4">
           {scrollImages.map((src, i) => (
@@ -344,24 +380,22 @@ export default function Home() {
                   >
                     <StopIcon />
                   </button>
+                ) : hasInput ? (
+                  <button
+                    type="submit"
+                    aria-label="Enviar mensagem"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-black transition hover:bg-zinc-200 max-sm:h-9 max-sm:w-9"
+                  >
+                    <SendIcon />
+                  </button>
                 ) : (
-                  <>
-                    <button
-                      type="submit"
-                      disabled={!hasInput}
-                      aria-label="Enviar mensagem"
-                      className="mobile-only flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-black transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      <SendIcon />
-                    </button>
-                    <IconButton
-                      label="Conversa por voz em tempo real"
-                      onClick={handleVoiceTalk}
-                      className="desktop-only max-sm:h-9 max-sm:w-9"
-                    >
-                      <MicIcon />
-                    </IconButton>
-                  </>
+                  <IconButton
+                    label="Conversa por voz em tempo real"
+                    onClick={handleVoiceTalk}
+                    className="max-sm:h-9 max-sm:w-9"
+                  >
+                    <MicIcon />
+                  </IconButton>
                 )}
               </div>
 
