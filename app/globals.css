@@ -37,3 +37,12 @@ body {
 .animate-scroll {
   animation: scroll 30s linear infinite;
 }
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}

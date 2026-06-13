@@ -1,8 +1,19 @@
 import { streamText } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
-import { BRAND_KNOWLEDGE } from '@/lib/knowledge-base';
+import { getBrandLegalSystemContext } from '@/lib/brand-config';
+import { PUSKILL_MASTER_DOCUMENT } from '@/lib/pmd';
+import { getTGhosTMinDPersonaContext } from '@/lib/tghostmind-persona';
 
 export const runtime = 'edge';
+
+const PROMPT_SEPARATOR = '\n\n---\n\n';
+
+/** PMD (hardware) + Brand & Legal Hub + Persona TGhosTMinD — Edge-safe */
+const TGhosTMinD_SYSTEM_PROMPT = [
+  getTGhosTMinDPersonaContext(),
+  PUSKILL_MASTER_DOCUMENT,
+  getBrandLegalSystemContext(),
+].join(PROMPT_SEPARATOR);
 
 const API_KEY_ENV = 'puskill-ai-ready_API_KEY';
 
@@ -93,7 +104,7 @@ export async function POST(req: Request) {
 
   const result = streamText({
     model: openai('gpt-4o-mini'),
-    system: BRAND_KNOWLEDGE,
+    system: TGhosTMinD_SYSTEM_PROMPT,
     messages,
   });
 
