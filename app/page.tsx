@@ -1,65 +1,171 @@
-import Image from "next/image";
+'use client';
+
+import { useChat } from 'ai/react';
+import { useEffect, useState } from 'react';
+
+const PLACEHOLDERS = [
+  'Inicie a revolução AI Ready...',
+  'Linha PUSKILL SYNAPSE...',
+];
+
+const HARDWARE_IMAGES = [
+  'https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&h=300&fit=crop',
+  'https://images.unsplash.com/photo-1535372437046-a0216a0cc242?w=400&h=300&fit=crop',
+  'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=400&h=300&fit=crop',
+  'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=400&h=300&fit=crop',
+  'https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?w=400&h=300&fit=crop',
+  'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=300&fit=crop',
+  'https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?w=400&h=300&fit=crop',
+  'https://images.unsplash.com/photo-1555617981-dac3880eac6e?w=400&h=300&fit=crop',
+];
+
+function useTypewriterPlaceholder(placeholders: string[]) {
+  const [text, setText] = useState('');
+  const [index, setIndex] = useState(0);
+  const [charIndex, setCharIndex] = useState(0);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    const current = placeholders[index];
+    const speed = deleting ? 35 : 70;
+
+    const timeout = setTimeout(() => {
+      if (!deleting) {
+        if (charIndex < current.length) {
+          setText(current.slice(0, charIndex + 1));
+          setCharIndex((prev) => prev + 1);
+        } else {
+          setTimeout(() => setDeleting(true), 1800);
+        }
+      } else if (charIndex > 0) {
+        setText(current.slice(0, charIndex - 1));
+        setCharIndex((prev) => prev - 1);
+      } else {
+        setDeleting(false);
+        setIndex((prev) => (prev + 1) % placeholders.length);
+      }
+    }, speed);
+
+    return () => clearTimeout(timeout);
+  }, [charIndex, deleting, index, placeholders]);
+
+  return text;
+}
 
 export default function Home() {
+  const { messages, input, handleInputChange, handleSubmit, isLoading } =
+    useChat({ api: '/api/chat' });
+
+  const placeholder = useTypewriterPlaceholder(PLACEHOLDERS);
+  const scrollImages = [...HARDWARE_IMAGES, ...HARDWARE_IMAGES];
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="relative h-screen overflow-hidden bg-black">
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="animate-scroll grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 md:grid-cols-4">
+          {scrollImages.map((src, i) => (
+            <div
+              key={`${src}-${i}`}
+              className="aspect-[4/3] overflow-hidden rounded-lg opacity-40"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={src}
+                alt=""
+                className="h-full w-full object-cover"
+                loading="lazy"
+              />
+            </div>
+          ))}
+        </div>
+        <div className="absolute inset-0 backdrop-blur-lg bg-zinc-950/80" />
+      </div>
+
+      <div className="relative z-10 flex h-full flex-col">
+        <header className="flex items-center justify-between px-8 py-6">
+          <h1 className="text-xl font-light tracking-[0.35em] text-white">
+            PUSKILL
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-sm tracking-wide text-zinc-500">
+            AI-Optimized Hardware
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+        </header>
+
+        <main className="flex flex-1 items-center justify-center px-4 pb-8">
+          <div className="w-full max-w-2xl rounded-2xl bg-gradient-to-r from-cyan-400 via-orange-500 to-cyan-400 p-[1px] shadow-[0_0_40px_rgba(34,211,238,0.15),0_0_60px_rgba(249,115,22,0.1)]">
+            <div className="flex h-[min(70vh,560px)] flex-col rounded-2xl bg-zinc-950/90 backdrop-blur-xl">
+              <div className="border-b border-zinc-800/80 px-6 py-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-2 w-2 animate-pulse rounded-full bg-cyan-400" />
+                  <h2 className="text-sm font-medium tracking-widest text-cyan-400">
+                    THEDOC
+                  </h2>
+                  <span className="text-xs text-zinc-600">
+                    Inteligência Cognitiva PUSKILL
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex-1 space-y-4 overflow-y-auto px-6 py-5">
+                {messages.length === 0 && (
+                  <p className="text-sm leading-relaxed text-zinc-500">
+                    Bem-vindo à era After AI. Pergunte sobre a linha PUSKILL
+                    SYNAPSE, DDR5 e SSDs NVMe Gen5 para ecossistemas de IA.
+                  </p>
+                )}
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`text-sm leading-relaxed ${
+                      message.role === 'user'
+                        ? 'text-zinc-300'
+                        : 'text-zinc-100'
+                    }`}
+                  >
+                    <span
+                      className={
+                        message.role === 'user'
+                          ? 'text-orange-400'
+                          : 'text-cyan-400'
+                      }
+                    >
+                      {message.role === 'user' ? 'Você' : 'TheDoc'}:
+                    </span>{' '}
+                    {message.content}
+                  </div>
+                ))}
+                {isLoading && (
+                  <p className="text-sm text-cyan-400/70 animate-pulse">
+                    TheDoc está processando...
+                  </p>
+                )}
+              </div>
+
+              <form
+                onSubmit={handleSubmit}
+                className="border-t border-zinc-800/80 px-6 py-4"
+              >
+                <div className="flex gap-3">
+                  <input
+                    value={input}
+                    onChange={handleInputChange}
+                    placeholder={placeholder}
+                    className="flex-1 rounded-lg border border-zinc-800 bg-zinc-900/80 px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="submit"
+                    disabled={isLoading || !input.trim()}
+                    className="rounded-lg bg-gradient-to-r from-cyan-500 to-orange-500 px-5 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Enviar
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
