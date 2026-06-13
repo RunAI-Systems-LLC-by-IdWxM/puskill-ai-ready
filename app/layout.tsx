@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PUSKILL | AI-Optimized Hardware",
-  description: "Landing page PUSKILL com TheDoc — inteligência cognitiva para hardware AI Ready.",
+  title: 'PUSKILL | AI-Optimized Hardware',
+  description:
+    'Landing page PUSKILL com TGhosT — inteligência cognitiva para hardware AI Ready.',
 };
 
 export default function RootLayout({
