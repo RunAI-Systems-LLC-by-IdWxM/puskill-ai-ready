@@ -181,31 +181,95 @@ export default function Home() {
     const viewport = window.visualViewport;
     if (!root || !viewport) return;
 
-    const isMobileLock =
-      window.matchMedia('(max-width: 639px)').matches ||
-      window.matchMedia('(orientation: landscape) and (max-height: 500px)').matches;
+    const mobileQuery = window.matchMedia(
+      '(max-width: 639px), (orientation: landscape) and (max-height: 500px)',
+    );
 
-    if (!isMobileLock) return;
+    const clearViewportLock = () => {
+      root.style.width = '';
+      root.style.left = '';
+      root.style.height = '';
+      root.style.top = '';
+    };
 
     const syncViewport = () => {
-      const keyboardOpen = viewport.height < window.innerHeight - 80;
-      if (keyboardOpen) {
-        root.style.height = `${viewport.height}px`;
-        root.style.top = `${viewport.offsetTop}px`;
-      } else {
-        root.style.height = '';
-        root.style.top = '';
+      root.style.width = `${viewport.width}px`;
+      root.style.left = `${viewport.offsetLeft}px`;
+      root.style.height = `${viewport.height}px`;
+      root.style.top = `${viewport.offsetTop}px`;
+    };
+
+    const enableViewportLock = () => {
+      syncViewport();
+      viewport.addEventListener('resize', syncViewport);
+      viewport.addEventListener('scroll', syncViewport);
+    };
+
+    const disableViewportLock = () => {
+      viewport.removeEventListener('resize', syncViewport);
+      viewport.removeEventListener('scroll', syncViewport);
+      clearViewportLock();
+    };
+
+    const onMobileChange = () => {
+      disableViewportLock();
+      if (mobileQuery.matches) enableViewportLock();
+    };
+
+    if (mobileQuery.matches) enableViewportLock();
+    mobileQuery.addEventListener('change', onMobileChange);
+
+    return () => {
+      mobileQuery.removeEventListener('change', onMobileChange);
+      disableViewportLock();
+    };
+  }, []);
+
+  useEffect(() => {
+    const mobileQuery = window.matchMedia(
+      '(max-width: 639px), (orientation: landscape) and (max-height: 500px)',
+    );
+
+    let startX = 0;
+    let startY = 0;
+
+    const onTouchStart = (event: TouchEvent) => {
+      startX = event.touches[0].clientX;
+      startY = event.touches[0].clientY;
+    };
+
+    const onTouchMove = (event: TouchEvent) => {
+      const target = event.target as Node;
+      if (messagesContainerRef.current?.contains(target)) return;
+
+      const dx = Math.abs(event.touches[0].clientX - startX);
+      const dy = Math.abs(event.touches[0].clientY - startY);
+      if (dx > dy) {
+        event.preventDefault();
       }
     };
 
-    viewport.addEventListener('resize', syncViewport);
-    viewport.addEventListener('scroll', syncViewport);
+    const enableTouchLock = () => {
+      document.addEventListener('touchstart', onTouchStart, { passive: true });
+      document.addEventListener('touchmove', onTouchMove, { passive: false });
+    };
+
+    const disableTouchLock = () => {
+      document.removeEventListener('touchstart', onTouchStart);
+      document.removeEventListener('touchmove', onTouchMove);
+    };
+
+    const onMobileChange = () => {
+      disableTouchLock();
+      if (mobileQuery.matches) enableTouchLock();
+    };
+
+    if (mobileQuery.matches) enableTouchLock();
+    mobileQuery.addEventListener('change', onMobileChange);
 
     return () => {
-      viewport.removeEventListener('resize', syncViewport);
-      viewport.removeEventListener('scroll', syncViewport);
-      root.style.height = '';
-      root.style.top = '';
+      mobileQuery.removeEventListener('change', onMobileChange);
+      disableTouchLock();
     };
   }, []);
 
@@ -222,9 +286,9 @@ export default function Home() {
   return (
     <div
       id="app-root"
-      className="mobile-root relative flex h-dvh min-h-0 flex-col overflow-hidden bg-black max-sm:fixed max-sm:inset-0 max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:w-full max-sm:max-w-[100vw]"
+      className="mobile-root relative flex h-dvh min-h-0 flex-col overflow-hidden bg-black max-sm:fixed max-sm:inset-x-0 max-sm:top-0 max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:w-full max-sm:max-w-full max-sm:overflow-x-clip"
     >
-      <div className="absolute inset-0 overflow-hidden">
+      <div className="bg-layer absolute inset-0 overflow-hidden max-sm:w-full max-sm:max-w-full max-sm:overflow-x-clip">
         <div className="animate-scroll grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 md:grid-cols-4">
           {scrollImages.map((src, i) => (
             <div
@@ -244,7 +308,7 @@ export default function Home() {
         <div className="absolute inset-0 backdrop-blur-lg bg-zinc-950/80" />
       </div>
 
-      <div className="relative z-10 flex min-h-0 flex-1 flex-col">
+      <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col max-sm:w-full max-sm:max-w-full max-sm:overflow-x-clip">
         <header className="flex shrink-0 items-center justify-between px-8 py-6 max-sm:gap-3 max-sm:px-4 max-sm:py-4">
           <Link
             href="/"
@@ -266,11 +330,11 @@ export default function Home() {
           </p>
         </header>
 
-        <main className="flex min-h-0 flex-1 flex-col items-center px-4 pb-6 max-sm:w-full max-sm:max-w-full max-sm:overflow-x-hidden max-sm:min-w-0">
+        <main className="flex min-h-0 flex-1 flex-col items-center overflow-x-clip px-4 pb-6 max-sm:w-full max-sm:min-w-0 max-sm:max-w-full">
           <div className="flex min-h-0 w-full max-w-3xl flex-1 flex-col max-sm:min-w-0 max-sm:max-w-full">
             <div
               ref={messagesContainerRef}
-              className="scrollbar-none min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-2 py-2"
+              className="scrollbar-none min-h-0 flex-1 touch-pan-y space-y-6 overflow-y-auto overscroll-y-contain px-2 py-2 max-sm:overflow-x-clip"
             >
               {messages.map((message) => (
                 <div
@@ -318,17 +382,17 @@ export default function Home() {
 
             <form onSubmit={handleSubmit} className="mt-auto shrink-0 pt-2">
               {showPromptHeading && (
-                <h2 className="mb-8 px-2 text-center font-normal leading-none tracking-tight text-white">
-                  <span className="block text-lg italic text-zinc-300 sm:text-xl">
+                <h2 className="prompt-heading mb-8 px-2 text-center font-normal leading-none tracking-tight text-white max-sm:px-3">
+                  <span className="block text-lg italic text-zinc-300 max-sm:text-base sm:text-xl">
                     ECOSSISTEMA{' '}
-                    <span className="relative inline-block text-[1.872em] font-black leading-none">
+                    <span className="relative inline-block text-[1.872em] font-black leading-none max-sm:text-[1.5em]">
                       PUSKILL
                       <span className="absolute left-full top-[84%] ml-[0.08em] -translate-y-1/2 text-[0.125em] font-normal leading-none">
                         ®
                       </span>
                     </span>
                   </span>
-                  <span className="mt-px block text-xl sm:text-2xl">
+                  <span className="mt-px block text-xl max-sm:text-lg sm:text-2xl">
                     Qual produto ou operação estruturamos hoje?
                   </span>
                 </h2>
