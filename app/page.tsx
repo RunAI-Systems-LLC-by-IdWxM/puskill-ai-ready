@@ -2,6 +2,7 @@
 
 import { useChat } from 'ai/react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
 const PLACEHOLDERS = [
@@ -182,7 +183,7 @@ function StopIcon() {
 }
 
 export default function Home() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading, stop } =
+  const { messages, input, handleInputChange, handleSubmit, isLoading, stop, setMessages } =
     useChat({ api: '/api/chat' });
 
   const placeholder = useTypewriterPlaceholder(PLACEHOLDERS);
@@ -226,14 +227,21 @@ export default function Home() {
 
       <div className="relative z-10 flex h-full flex-col">
         <header className="flex items-center justify-between px-8 py-6">
-          <Image
-            src="/logo_puskill_oficial_white.png"
-            alt="PUSKILL"
-            width={180}
-            height={48}
-            priority
-            className="h-10 w-auto"
-          />
+          <Link
+            href="/"
+            aria-label="Ir para home PUSKILL"
+            className="inline-flex shrink-0 transition-opacity hover:opacity-80"
+            onClick={() => setMessages([])}
+          >
+            <Image
+              src="/logo_puskill_oficial_white.png"
+              alt="PUSKILL"
+              width={180}
+              height={48}
+              priority
+              className="h-10 w-auto"
+            />
+          </Link>
           <p className="text-sm tracking-wide text-zinc-500">
             AI-Optimized Hardware
           </p>
