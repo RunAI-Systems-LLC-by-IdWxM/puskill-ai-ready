@@ -445,7 +445,7 @@ export const PORTFOLIO_RESPONSE_DIRECTIVES = [
   'PERMITIDO para assets do PRODUCT_CATALOG: ![Nome](/assets/branding/.../arquivo.png) — obrigatório ao pedir imagem.',
   'Permitido: bullets (-), quebras de linha reais entre blocos, texto plano.',
   'Cada produto: bullet com nome na primeira linha; descrição na linha seguinte; linha em branco antes do próximo item.',
-    'Rodapé: linha em branco antes da assinatura; depois duas linhas — "Powered by RunAI Systems LLC" e "Designed by Wesley de Souza Macedo".',
+    'Rodapé: linha em branco antes da assinatura; depois duas linhas — "Powered by RunAI Systems LLC" e "Designed by Wesley S. Macedo".',
   'Tom: disruptivo, técnico, After AI. Comunicação profissional — zero fluff.',
 ] as const;
 
@@ -567,10 +567,10 @@ export const BRAND_FOOTER = {
   poweredByPrefix: 'Powered by',
   poweredByEntity: BRAND_OWNERSHIP.shortEntity,
   poweredByLine: `Powered by ${BRAND_OWNERSHIP.shortEntity}`,
-  designedBy: 'Wesley de Souza Macedo',
-  designedByLine: 'Designed by Wesley de Souza Macedo',
+  designedBy: 'Wesley S. Macedo',
+  designedByLine: 'Designed by Wesley S. Macedo',
   /** @deprecated Use poweredByLine + designedByLine (duas linhas) */
-  corporateSeal: `Powered by ${BRAND_OWNERSHIP.shortEntity}\nDesigned by Wesley de Souza Macedo`,
+  corporateSeal: `Powered by ${BRAND_OWNERSHIP.shortEntity}\nDesigned by Wesley S. Macedo`,
 } as const;
 
 /** Assinatura corporativa — duas linhas distintas para rodapé de respostas */

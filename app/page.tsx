@@ -129,6 +129,20 @@ function StopIcon() {
   );
 }
 
+function SendIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M12 19V5M12 5l-6 6M12 5l6 6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export default function Home() {
   const {
     messages,
@@ -173,7 +187,7 @@ export default function Home() {
   }
 
   return (
-    <div className="relative flex h-dvh min-h-0 flex-col overflow-hidden bg-black">
+    <div className="mobile-root relative flex h-dvh min-h-0 flex-col overflow-hidden bg-black max-sm:w-full max-sm:max-w-full max-sm:overflow-x-hidden">
       <div className="absolute inset-0 overflow-hidden">
         <div className="animate-scroll grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 md:grid-cols-4">
           {scrollImages.map((src, i) => (
@@ -195,11 +209,11 @@ export default function Home() {
       </div>
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
-        <header className="flex shrink-0 items-center justify-between px-8 py-6">
+        <header className="flex shrink-0 items-center justify-between px-8 py-6 max-sm:gap-3 max-sm:px-4 max-sm:py-4">
           <Link
             href="/"
             aria-label="Ir para home PUSKILL"
-            className="inline-flex shrink-0 transition-opacity hover:opacity-80"
+            className="inline-flex shrink-0 transition-opacity hover:opacity-80 max-sm:min-w-0 max-sm:max-w-[52%]"
             onClick={() => setMessages([])}
           >
             <Image
@@ -208,16 +222,16 @@ export default function Home() {
               width={180}
               height={48}
               priority
-              className="h-10 w-auto"
+              className="h-10 w-auto max-sm:h-8 max-sm:max-w-full max-sm:object-contain max-sm:object-left"
             />
           </Link>
-          <p className="text-sm tracking-wide text-zinc-500">
+          <p className="text-sm tracking-wide text-zinc-500 max-sm:shrink-0 max-sm:max-w-[44%] max-sm:text-right max-sm:text-[10px] max-sm:leading-tight landscape:max-sm:text-[9px]">
             AI-Optimized Hardware
           </p>
         </header>
 
-        <main className="flex min-h-0 flex-1 flex-col items-center px-4 pb-6">
-          <div className="flex min-h-0 w-full max-w-3xl flex-1 flex-col">
+        <main className="flex min-h-0 flex-1 flex-col items-center px-4 pb-6 max-sm:w-full max-sm:max-w-full max-sm:overflow-x-hidden max-sm:min-w-0">
+          <div className="flex min-h-0 w-full max-w-3xl flex-1 flex-col max-sm:min-w-0 max-sm:max-w-full">
             <div
               ref={messagesContainerRef}
               className="scrollbar-none min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-2 py-2"
@@ -284,7 +298,7 @@ export default function Home() {
                 </h2>
               )}
 
-              <div className="flex min-h-[3.85rem] items-center gap-1 rounded-full bg-[#1e1e1e] px-3 py-2.5 shadow-[0_4px_24px_rgba(0,0,0,0.35)] transition focus-within:ring-1 focus-within:ring-zinc-600/60 sm:gap-2 sm:px-4">
+              <div className="flex min-h-[3.85rem] items-center gap-1 rounded-full bg-[#1e1e1e] px-3 py-2.5 shadow-[0_4px_24px_rgba(0,0,0,0.35)] transition focus-within:ring-1 focus-within:ring-zinc-600/60 max-sm:min-w-0 max-sm:max-w-full max-sm:gap-1.5 max-sm:px-2.5 sm:gap-2 sm:px-4">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -298,6 +312,7 @@ export default function Home() {
                   label="Carregar imagens, vídeos ou PDF"
                   disabled={isLoading}
                   onClick={() => fileInputRef.current?.click()}
+                  className="max-sm:h-9 max-sm:w-9"
                 >
                   <PlusIcon />
                 </IconButton>
@@ -317,7 +332,7 @@ export default function Home() {
                       }
                     }
                   }}
-                  className="scrollbar-none min-h-[1.925rem] max-h-[8.25rem] min-w-0 flex-1 resize-none overflow-y-auto bg-transparent py-2 text-[15px] leading-6 text-zinc-100 placeholder:text-zinc-500 outline-none"
+                  className="scrollbar-none min-h-[1.925rem] max-h-[8.25rem] min-w-0 flex-1 resize-none overflow-y-auto bg-transparent py-2 text-[15px] leading-6 text-zinc-100 placeholder:text-zinc-500 outline-none max-sm:max-w-full max-sm:text-[14px]"
                 />
 
                 {isLoading ? (
@@ -325,17 +340,28 @@ export default function Home() {
                     type="button"
                     aria-label="Parar geração"
                     onClick={stop}
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-zinc-300 transition hover:text-white"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-zinc-300 transition hover:text-white max-sm:h-9 max-sm:w-9"
                   >
                     <StopIcon />
                   </button>
                 ) : (
-                  <IconButton
-                    label="Conversa por voz em tempo real"
-                    onClick={handleVoiceTalk}
-                  >
-                    <MicIcon />
-                  </IconButton>
+                  <>
+                    <button
+                      type="submit"
+                      disabled={!hasInput}
+                      aria-label="Enviar mensagem"
+                      className="mobile-only flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-black transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <SendIcon />
+                    </button>
+                    <IconButton
+                      label="Conversa por voz em tempo real"
+                      onClick={handleVoiceTalk}
+                      className="desktop-only max-sm:h-9 max-sm:w-9"
+                    >
+                      <MicIcon />
+                    </IconButton>
+                  </>
                 )}
               </div>
 
