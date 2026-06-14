@@ -48,7 +48,7 @@ export function AssistantMessage({ content }: AssistantMessageProps) {
   const blocks = body.split(/\n\n+/).filter(Boolean);
 
   return (
-    <div className="break-words">
+    <div className="min-w-0 break-words">
       <div className="space-y-4">
         {blocks.map((block, index) => (
           <MessageBlock key={index} block={block} />

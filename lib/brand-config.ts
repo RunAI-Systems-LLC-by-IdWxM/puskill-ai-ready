@@ -512,6 +512,7 @@ export const OUTPUT_VISUALIZATION_PROTOCOL = {
 
 export const BRAND_ASSETS = {
   RILL_LOGO: `${BRANDING_BASE_PATH}/logo_ia_cognitiva.png`,
+  RILL_AVATAR: `${BRANDING_BASE_PATH}/rill_logo_avatar_white.png`,
   LOGO_PRIMARY: `${BRANDING_BASE_PATH}/1.png`,
   REGISTRO_INPI_C9: `${BRANDING_BASE_PATH}/registros_puskill_classe_9_inpi_logo_nova_oficial.png`,
   REGISTRO_PORTFOLIO: `${BRANDING_BASE_PATH}/1.4 ALL REGISTERS OF PUSKILL.png`,

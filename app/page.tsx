@@ -3,6 +3,7 @@
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { AssistantMessage } from '@/components/assistant-message';
+import { RillAvatar } from '@/components/rill-avatar';
 import { BRAND_FOOTER } from '@/lib/brand-config';
 import { getUIMessageText } from '@/lib/get-ui-message-text';
 import Image from 'next/image';
@@ -377,15 +378,22 @@ export default function Home() {
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`flex ${
-                    message.role === 'user' ? 'justify-end' : 'justify-start'
+                  className={`flex w-full min-w-0 ${
+                    message.role === 'user'
+                      ? 'justify-end'
+                      : 'items-start gap-3'
                   }`}
                 >
+                  {message.role === 'assistant' ? (
+                    <div className="mt-0.5 shrink-0 overflow-visible">
+                      <RillAvatar size={32} />
+                    </div>
+                  ) : null}
                   <div
-                    className={`max-w-[85%] break-words rounded-3xl px-5 py-3 text-sm leading-relaxed ${
+                    className={`min-w-0 break-words rounded-3xl px-5 py-3 text-sm leading-relaxed ${
                       message.role === 'user'
-                        ? 'bg-zinc-800/90 text-zinc-100'
-                        : 'bg-transparent text-zinc-200'
+                        ? 'max-w-[85%] bg-zinc-800/90 text-zinc-100'
+                        : 'flex-1 text-zinc-200'
                     }`}
                   >
                     {message.role === 'assistant' ? (
@@ -398,8 +406,11 @@ export default function Home() {
               ))}
 
               {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
-                <div className="flex justify-start">
-                  <div className="flex items-center gap-1.5 rounded-3xl px-2 py-3">
+                <div className="flex w-full min-w-0 items-start gap-3">
+                  <div className="mt-0.5 shrink-0 overflow-visible">
+                    <RillAvatar size={32} />
+                  </div>
+                  <div className="flex min-w-0 flex-1 items-center gap-1.5 rounded-3xl px-2 py-3">
                     <span className="h-2 w-2 animate-bounce rounded-full bg-zinc-500 [animation-delay:-0.3s]" />
                     <span className="h-2 w-2 animate-bounce rounded-full bg-zinc-500 [animation-delay:-0.15s]" />
                     <span className="h-2 w-2 animate-bounce rounded-full bg-zinc-500" />
@@ -441,7 +452,8 @@ export default function Home() {
                 </h2>
               )}
 
-              <div className="flex min-h-[3.85rem] items-center gap-1 rounded-full bg-[#1e1e1e] px-3 py-2.5 shadow-[0_4px_24px_rgba(0,0,0,0.35)] transition focus-within:ring-1 focus-within:ring-zinc-600/60 max-sm:min-w-0 max-sm:max-w-full max-sm:gap-1.5 max-sm:px-2.5 sm:gap-2 sm:px-4">
+              <div className="flex w-full min-w-0 items-center gap-3 max-sm:gap-2">
+                <div className="flex min-h-[3.85rem] min-w-0 flex-1 items-center gap-1 rounded-full bg-[#1e1e1e] px-3 py-2.5 shadow-[0_4px_24px_rgba(0,0,0,0.35)] transition focus-within:ring-1 focus-within:ring-zinc-600/60 max-sm:gap-1.5 max-sm:px-2.5 sm:gap-2 sm:px-4">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -505,6 +517,13 @@ export default function Home() {
                     <MicIcon />
                   </IconButton>
                 )}
+                </div>
+
+                {showPromptHeading ? (
+                  <div className="shrink-0 overflow-visible">
+                    <RillAvatar size={48} />
+                  </div>
+                ) : null}
               </div>
 
               <p className="mt-3 text-center text-xs text-zinc-500">

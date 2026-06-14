@@ -9,7 +9,9 @@
     "lint": "eslint",
     "prepare:catalog": "node scripts/prepare_for_ingest.js",
     "ingest:catalog": "node --import tsx scripts/ingest-ram-catalog.ts",
-    "catalog:pipeline": "npm run prepare:catalog && npm run ingest:catalog"
+    "catalog:pipeline": "npm run prepare:catalog && npm run ingest:catalog",
+    "split:rill-avatars": "node scripts/split-rill-avatars.mjs",
+    "extract:rill-head": "node scripts/extract-rill-head.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.71",
@@ -27,6 +29,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
+    "sharp": "^0.35.1",
     "tailwindcss": "^4",
     "tsx": "^4.20.3",
     "typescript": "^5",
