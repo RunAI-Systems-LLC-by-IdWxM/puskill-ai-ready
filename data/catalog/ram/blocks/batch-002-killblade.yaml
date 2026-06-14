@@ -1,0 +1,113 @@
+id: PUSKILL-KILLBLADE-DDR4-DIMM-8GB-2666
+brand: PUSKILL
+line: KILLBLADE
+format: DIMM
+type: DDR4
+capacity_gb: 8
+frequency_mhz: 2666
+voltage_v: 1.2
+pins: 288
+latency: CL16
+chips: Hynix;Micron;Samsung;PUSKILL
+application: Desktop;Gaming;Workstation
+warranty: lifetime
+packaging: bulk;retail
+certifications: FCC;CE;RoHS
+notes: DDR4 DIMM 8GB 2666MHz com design de resfriamento; ideal para desktops e estações.
+source_doc: Hardware de computador , RAM.txt
+description_short: PUSKILL KILLBLADE DDR4 DIMM 8GB 2666MHz, 1.2V, dissipador opcional, garantia vitalícia.
+---
+id: PUSKILL-KILLBLADE-DDR4-DIMM-16GB-3200
+brand: PUSKILL
+line: KILLBLADE
+format: DIMM
+type: DDR4
+capacity_gb: 16
+frequency_mhz: 3200
+voltage_v: 1.2
+pins: 288
+latency: CL16
+chips: Hynix;Micron;Samsung;PUSKILL
+application: Desktop;Gaming;Overclock
+warranty: lifetime
+packaging: bulk;retail
+certifications: FCC;CE;RoHS
+notes: DDR4 DIMM 16GB 3200MHz com dissipador de calor e suporte a overclock.
+source_doc: Hardware de computador , RAM.txt
+description_short: PUSKILL KILLBLADE DDR4 DIMM 16GB 3200MHz, 1.2V, design premium de resfriamento.
+---
+id: PUSKILL-KILLBLADE-DDR4-DIMM-32GB-3600
+brand: PUSKILL
+line: KILLBLADE
+format: DIMM
+type: DDR4
+capacity_gb: 32
+frequency_mhz: 3600
+voltage_v: 1.35
+pins: 288
+latency: CL19
+chips: Hynix;Micron;Samsung;PUSKILL
+application: Desktop;Gaming;Streaming
+warranty: lifetime
+packaging: bulk;retail
+certifications: FCC;CE;RoHS
+notes: DDR4 DIMM 32GB 3600MHz RGB com cooler metálico para uso gamer.
+source_doc: Hardware de computador , RAM.txt
+description_short: PUSKILL KILLBLADE DDR4 DIMM 32GB 3600MHz RGB, 1.35V, ideal para overclock e gaming.
+---
+id: PUSKILL-KILLBLADE-DDR4-SODIMM-8GB-2666
+brand: PUSKILL
+line: KILLBLADE
+format: SODIMM
+type: DDR4
+capacity_gb: 8
+frequency_mhz: 2666
+voltage_v: 1.2
+pins: 260
+latency: CL22
+chips: Hynix;Micron;Samsung;PUSKILL
+application: Laptop;MiniPC;POS
+warranty: lifetime
+packaging: bulk;retail
+certifications: FCC;CE;RoHS
+notes: DDR4 SODIMM 8GB 2666MHz para notebooks finos e leves, baixo aquecimento.
+source_doc: Hardware de computador , RAM.txt
+description_short: PUSKILL KILLBLADE DDR4 SODIMM 8GB 2666MHz, 1.2V, 260 pinos, estabilidade para uso diário.
+---
+id: PUSKILL-KILLBLADE-DDR4-RGB-8GB-3200
+brand: PUSKILL
+line: KILLBLADE
+format: DIMM
+type: DDR4-RGB
+capacity_gb: 8
+frequency_mhz: 3200
+voltage_v: 1.35
+pins: 288
+latency: CL16
+chips: Hynix;Micron;Samsung;PUSKILL
+application: Desktop;Gaming
+warranty: lifetime
+packaging: bulk;retail
+certifications: FCC;CE;RoHS
+notes: DDR4 RGB 8GB 3200MHz com iluminação endereçável e dissipador.
+source_doc: Hardware de computador , RAM.txt
+description_short: PUSKILL KILLBLADE DDR4 RGB 8GB 3200MHz, 1.35V, LED endereçável, ideal para PCs gamers.
+---
+id: PUSKILL-KILLBLADE-DDR4-HEATSINK-8GB-3200
+brand: PUSKILL
+line: KILLBLADE
+format: DIMM
+type: DDR4-HEATSINK
+capacity_gb: 8
+frequency_mhz: 3200
+voltage_v: 1.2
+pins: 288
+latency: CL16
+chips: Hynix;Micron;Samsung;PUSKILL
+application: Desktop;Gaming
+warranty: lifetime
+packaging: bulk;retail
+certifications: FCC;CE;RoHS
+notes: Dissipador de calor para módulos DDR4 8GB/16GB/32GB; melhora dissipação térmica em setups gamer.
+source_doc: Hardware de computador , RAM.txt
+description_short: PUSKILL KILLBLADE DDR4 com dissipador, compatível 3200/3600MHz, ideal para PCs gamers.

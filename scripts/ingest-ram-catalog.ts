@@ -1,0 +1,99 @@
+import { readFileSync, readdirSync, writeFileSync, mkdirSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { parseAllDocuments } from 'yaml';
+import type { CatalogBundle, CatalogRecord } from '../lib/catalog/ram/types';
+import {
+  buildManifest,
+  finalizeCatalogRecord,
+  validateCatalogRecordInput,
+} from '../lib/catalog/ram/validate';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const ROOT = join(__dirname, '..');
+const BLOCKS_DIR = join(ROOT, 'data', 'catalog', 'ram', 'blocks');
+const OUT_DIR = join(ROOT, 'data', 'catalog', 'ram');
+
+function loadYamlDocuments(filePath: string): Record<string, unknown>[] {
+  const raw = readFileSync(filePath, 'utf8');
+  return parseAllDocuments(raw).map((doc) => doc.toJSON() as Record<string, unknown>);
+}
+
+function ingest(): CatalogBundle {
+  const batchFiles = readdirSync(BLOCKS_DIR)
+    .filter((name) => name.endsWith('.yaml') || name.endsWith('.yml'))
+    .sort();
+
+  const ingestTimestamp = new Date().toISOString();
+  const records: CatalogRecord[] = [];
+  const seenIds = new Map<string, string>();
+  const duplicateIds: string[] = [];
+  const errors: string[] = [];
+
+  for (const batchFile of batchFiles) {
+    const docs = loadYamlDocuments(join(BLOCKS_DIR, batchFile));
+    for (const [index, doc] of docs.entries()) {
+      const result = validateCatalogRecordInput(doc);
+      if (!result.ok) {
+        errors.push(
+          `${batchFile}[${index}]: ${result.errors.join('; ')}`,
+        );
+        continue;
+      }
+
+      const { record, warnings } = result;
+      const prior = seenIds.get(record.id);
+      if (prior) {
+        duplicateIds.push(record.id);
+        errors.push(
+          `id duplicado rejeitado: ${record.id} (em ${prior} e ${batchFile})`,
+        );
+        continue;
+      }
+
+      seenIds.set(record.id, batchFile);
+      records.push(
+        finalizeCatalogRecord(record, warnings, ingestTimestamp),
+      );
+    }
+  }
+
+  if (errors.length > 0) {
+    console.error('Erros de ingestão:\n', errors.join('\n'));
+    process.exitCode = 1;
+  }
+
+  const manifest = buildManifest(records, batchFiles.length, duplicateIds);
+
+  return {
+    version: 1,
+    generated_at: ingestTimestamp,
+    records,
+    manifest,
+  };
+}
+
+mkdirSync(OUT_DIR, { recursive: true });
+const bundle = ingest();
+
+writeFileSync(
+  join(OUT_DIR, 'catalog.json'),
+  `${JSON.stringify(bundle, null, 2)}\n`,
+  'utf8',
+);
+writeFileSync(
+  join(OUT_DIR, 'manifest.json'),
+  `${JSON.stringify(bundle.manifest, null, 2)}\n`,
+  'utf8',
+);
+
+console.log(
+  `Ingestão concluída: ${bundle.records.length} registros, ${bundle.manifest.batches_processed} lotes.`,
+);
+console.log('Contagem por linha:', bundle.manifest.count_by_line);
+if (bundle.manifest.ids_with_warnings.length > 0) {
+  console.log(
+    'IDs com warnings:',
+    bundle.manifest.ids_with_warnings.map((w) => w.id).join(', '),
+  );
+}
