@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { BRAND_FOOTER } from '@/lib/brand-config';
 import {
   parseAssistantMessage,
   parseMessageSegments,
@@ -57,9 +58,10 @@ export function AssistantMessage({ content }: AssistantMessageProps) {
       {footer ? (
         <div className="mt-6">
           <div className="mb-4 h-4" aria-hidden />
-          <p className="whitespace-pre-line text-sm leading-relaxed text-zinc-400">
-            {footer}
-          </p>
+          <div className="text-center text-[10px] leading-relaxed text-zinc-400 sm:text-[11px]">
+            <p>{BRAND_FOOTER.poweredByLine}</p>
+            <p className="italic">{BRAND_FOOTER.designedByLine}</p>
+          </div>
         </div>
       ) : null}
     </div>

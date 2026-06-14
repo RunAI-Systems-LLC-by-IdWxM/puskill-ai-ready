@@ -72,11 +72,45 @@ export const CORE_IDENTITY_TRIGGERS = [
   'fundador',
   'founder',
   'wsscb',
-  'vnexx',
-  'vennon',
   'cultura operacional',
   'core identity',
 ] as const;
+
+/** Contexto que autoriza menção à arquitetura vNEXX */
+export const WESLEY_CONTEXT_TRIGGERS = [
+  'wesley de souza macedo',
+  'wesley s. macedo',
+  'wesley s macedo',
+  'wesley macedo',
+  'wesleysmacedo',
+  'wesley',
+  'macedo',
+  'fundador',
+  'founder',
+  'quem é o fundador',
+  'biografia do fundador',
+  'trajetória do fundador',
+  'autor da marca',
+  'titular/autor',
+] as const;
+
+/**
+ * Trava de divulgação vNEXX — não citar em contextos gerais.
+ * vNEXX só pode ser discutida quando o usuário pergunta sobre Wesley de Souza Macedo.
+ */
+export const VNEXX_DISCLOSURE_POLICY = {
+  prohibition:
+    'PROIBIDO citar, explicar, sugerir ou discutir a arquitetura vNEXX em contextos gerais: saudações, hardware, portfólio, linhas PUSKILL, soberania de marca, suporte técnico, especificações, "quem é dono", autenticidade ou qualquer assunto não relacionado ao fundador.',
+  allowedOnlyWhen:
+    'PERMITIDO mencionar vNEXX somente quando o usuário perguntar explicitamente sobre Wesley de Souza Macedo (ou Wesley S. Macedo), sua biografia, trajetória, propriedade intelectual ou papel como fundador/titular.',
+  blockedEvenIfAsked:
+    'Se o usuário perguntar "o que é vNEXX?" sem contexto sobre Wesley → NÃO explicar vNEXX; redirecionar para hardware PUSKILL ou atendimento RunAI Systems LLC.',
+  greetingProhibition:
+    'NUNCA sugerir vNEXX em saudações ou menus de opções iniciais.',
+  redirect:
+    'Em vez de vNEXX, ofereça: linhas de hardware PUSKILL (VENENO, KILLBLADE, FUSE, DIAMOND), suporte técnico ou soberania operacional da RunAI Systems LLC no Brasil.',
+  internalCitation: '[cite: 1]',
+} as const;
 
 export const WSSCB_OPERATIONAL_MANDATE = {
   flow: BRAND_IDENTITY.WSSCB.FLOW,
@@ -101,8 +135,8 @@ export const LEGAL_PATENT_REFERENCES = [PATENT_VNEXX] as const;
 
 export const LEGAL_REGISTRATION_REFERENCES = [
   {
-    id: 'registration-tghost',
-    label: 'Registro TGhosT',
+    id: 'registration-rill',
+    label: 'Registro Rill',
     document: 'TGhosT by Wesley S. Macedo - Copia.pdf',
     citation: '[cite: 2]',
   },
@@ -477,13 +511,13 @@ export const OUTPUT_VISUALIZATION_PROTOCOL = {
 // ---------------------------------------------------------------------------
 
 export const BRAND_ASSETS = {
-  TGHOST_LOGO: `${BRANDING_BASE_PATH}/TGhosT.png`,
+  RILL_LOGO: `${BRANDING_BASE_PATH}/logo_ia_cognitiva.png`,
   LOGO_PRIMARY: `${BRANDING_BASE_PATH}/1.png`,
   REGISTRO_INPI_C9: `${BRANDING_BASE_PATH}/registros_puskill_classe_9_inpi_logo_nova_oficial.png`,
   REGISTRO_PORTFOLIO: `${BRANDING_BASE_PATH}/1.4 ALL REGISTERS OF PUSKILL.png`,
-  TGHOST_ICON: `${BRANDING_BASE_PATH}/icon.png`,
-  TGHOST_ICON_ADAPTIVE: `${BRANDING_BASE_PATH}/adaptive-icon.png`,
-  TGHOST_SPLASH: `${BRANDING_BASE_PATH}/splash.png`,
+  RILL_ICON: `${BRANDING_BASE_PATH}/icon.png`,
+  RILL_ICON_ADAPTIVE: `${BRANDING_BASE_PATH}/adaptive-icon.png`,
+  RILL_SPLASH: `${BRANDING_BASE_PATH}/splash.png`,
 } as const;
 
 export type BrandAssetKey = keyof typeof BRAND_ASSETS;
@@ -518,7 +552,7 @@ export const BRAND_SOVEREIGNTY_BR = {
       'quem possui a marca',
       'who owns',
     ],
-    text: 'A marca PUSKILL possui presença global como uma linha de hardware de tecnologia. No entanto, no Brasil, a marca é operada exclusivamente pela RunAI Systems LLC. Nós não apenas distribuímos; nós governamos o ecossistema local, aplicamos controle de qualidade rigoroso, garantimos suporte especializado e integramos nossos produtos à arquitetura vNEXX.',
+    text: 'A marca PUSKILL possui presença global como uma linha de hardware de tecnologia. No entanto, no Brasil, a marca é operada exclusivamente pela RunAI Systems LLC. Nós não apenas distribuímos; nós governamos o ecossistema local, aplicamos controle de qualidade rigoroso e garantimos suporte especializado.',
   },
   thinkingDirective:
     'Quando questionarem origem ou registro, desvie o foco da burocracia de registro internacional para o benefício da gestão local. O usuário quer saber se está seguro comprando com você.',
@@ -530,7 +564,7 @@ export const BRAND_SOVEREIGNTY_BR = {
   ],
   affirmations: [
     'SEMPRE afirmar que a RunAI possui Soberania Operacional e Governança de Ecossistema no Brasil.',
-    'SEMPRE enfatizar curadoria, integração cognitiva vNEXX e suporte especializado local.',
+    'SEMPRE enfatizar curadoria, suporte especializado local e integração de hardware PUSKILL.',
   ],
   internalCitation: '[cite: 1, 2]',
 } as const;
@@ -558,7 +592,7 @@ export const CUSTODY_INSTRUCTIONS = {
     `PROIBIDO: ${BRAND_SOVEREIGNTY_BR.prohibitions[0]}`,
     `Design/Branding: autoria de ${BRAND_DEVELOPER} ${BRAND_OWNERSHIP.citation}.`,
     'Cite registros INPI pelos arquivos listados com [cite: 2].',
-    'Cite patente vNEXX (arquitetura) com [cite: 1] — não confundir com patente global da marca.',
+    'Cite patente vNEXX (arquitetura) com [cite: 1] somente em contexto sobre Wesley de Souza Macedo — não confundir com patente global da marca.',
     'Nunca invente documentos ou titulares fora deste hub.',
   ],
 } as const;
@@ -586,7 +620,7 @@ export function getResponseFooter(): string {
 /** Bloco legal — output limpo (citações apenas na memória interna) */
 export const LEGAL_STATUS_BLOCK = {
   heading: 'Situação Legal no Brasil:',
-  body: `No Brasil, a PUSKILL é governada pela ${BRAND_OWNERSHIP.shortEntity} com Soberania Operacional e Governança de Ecossistema — curadoria, controle de qualidade, suporte especializado e integração à arquitetura vNEXX.`,
+  body: `No Brasil, a PUSKILL é governada pela ${BRAND_OWNERSHIP.shortEntity} com Soberania Operacional e Governança de Ecossistema — curadoria, controle de qualidade e suporte especializado.`,
   internalCitation: '[cite: 1, 2]',
   seal: getCorporateSignature(),
 } as const;
@@ -657,7 +691,7 @@ function formatProductLinePortfolio(): string {
 }
 
 function formatLegalBlock(): string {
-  const patents = `- vNEXX: ${PATENT_VNEXX.number} | Doc: ${PATENT_VNEXX.document} ${PATENT_VNEXX.citation}`;
+  const patents = `- vNEXX (uso restrito — ver VNEXX_DISCLOSURE_POLICY): ${PATENT_VNEXX.number} | Doc: ${PATENT_VNEXX.document} ${PATENT_VNEXX.citation}`;
   const registrations = LEGAL_REGISTRATION_REFERENCES.map(
     (r) => `- ${r.label}: ${r.document} ${r.citation}`,
   ).join('\n');
@@ -676,8 +710,25 @@ function formatLegalBlock(): string {
 }
 
 /**
- * Core Identity — Founder, WSSCB, vNEXX para injeção no system prompt.
- * Fonte autoritativa para perguntas sobre fundador, operação e arquitetura.
+ * Trava vNEXX — injetar no system prompt.
+ */
+export function getVnexxDisclosureContext(): string {
+  return [
+    '## TRAVA vNEXX — DIVULGAÇÃO RESTRITA',
+    '',
+    `- ${VNEXX_DISCLOSURE_POLICY.prohibition}`,
+    `- ${VNEXX_DISCLOSURE_POLICY.allowedOnlyWhen}`,
+    `- ${VNEXX_DISCLOSURE_POLICY.blockedEvenIfAsked}`,
+    `- ${VNEXX_DISCLOSURE_POLICY.greetingProhibition}`,
+    `- Redirecionamento: ${VNEXX_DISCLOSURE_POLICY.redirect}`,
+    '',
+    'Gatilhos de contexto Wesley (único cenário para vNEXX):',
+    WESLEY_CONTEXT_TRIGGERS.map((t) => `- ${t}`).join('\n'),
+  ].join('\n');
+}
+
+/**
+ * Core Identity — Founder, WSSCB; vNEXX somente no bloco do fundador.
  */
 export function getCoreIdentityContext(): string {
   return [
@@ -688,15 +739,16 @@ export function getCoreIdentityContext(): string {
     `- Biografia (usar verbatim quando perguntado sobre Wesley S. Macedo ou o fundador): ${BRAND_IDENTITY.FOUNDER.BIO}`,
     `- Copyright: ${BRAND_IDENTITY.FOUNDER.COPYRIGHT}`,
     '',
+    '### Arquitetura vNEXX — SOMENTE CONTEXTO WESLEY',
+    `- ${VNEXX_DISCLOSURE_POLICY.allowedOnlyWhen}`,
+    `- Definição (usar apenas se contexto Wesley): ${BRAND_IDENTITY.VNEXX.DEFINITION} ${BRAND_IDENTITY.VNEXX.internalCitation}`,
+    `- Princípio (usar apenas se contexto Wesley): ${BRAND_IDENTITY.VNEXX.PRINCIPLE}`,
+    `- Patente (usar apenas se contexto Wesley): ${PATENT_VNEXX.number} ${PATENT_VNEXX.citation}`,
+    '',
     '### Framework Cognitivo — WSSCB',
     `- Definição: ${BRAND_IDENTITY.WSSCB.DEFINITION} ${BRAND_IDENTITY.WSSCB.internalCitation}`,
     `- Fluxo Operacional: ${BRAND_IDENTITY.WSSCB.FLOW}`,
     `- Propósito: ${BRAND_IDENTITY.WSSCB.PURPOSE}`,
-    '',
-    '### Arquitetura — vNEXX',
-    `- Definição: ${BRAND_IDENTITY.VNEXX.DEFINITION} ${BRAND_IDENTITY.VNEXX.internalCitation}`,
-    `- Princípio: ${BRAND_IDENTITY.VNEXX.PRINCIPLE}`,
-    `- Patente: ${PATENT_VNEXX.number} ${PATENT_VNEXX.citation}`,
     '',
     '### Mandato Operacional',
     `- ${WSSCB_OPERATIONAL_MANDATE.governance}`,
@@ -704,7 +756,7 @@ export function getCoreIdentityContext(): string {
     `- ${WSSCB_OPERATIONAL_MANDATE.rule}`,
     '',
     '### Gatilhos Core Identity',
-    'Perguntas sobre quem você é, como opera, fundador, WSSCB ou vNEXX → extrair exclusivamente deste bloco. Não inventar.',
+    'Perguntas sobre quem você é, como opera, fundador ou WSSCB → extrair deste bloco. Não inventar.',
     'Gatilhos: ' + CORE_IDENTITY_TRIGGERS.join(', '),
   ].join('\n');
 }
@@ -745,6 +797,8 @@ export function getBrandSovereigntyContext(): string {
  */
 export function getBrandLegalSystemContext(): string {
   return [
+    getVnexxDisclosureContext(),
+    '',
     getCoreIdentityContext(),
     '',
     '## BRAND & LEGAL HUB — RunAI Systems LLC',
@@ -763,7 +817,7 @@ export function getBrandLegalSystemContext(): string {
     formatLegalBlock(),
     '',
     '### Ativos Públicos (public/assets/branding/)',
-    `- TGHOST_LOGO: ${BRAND_ASSETS.TGHOST_LOGO}`,
+    `- RILL_LOGO: ${BRAND_ASSETS.RILL_LOGO}`,
     `- LOGO_PRIMARY: ${BRAND_ASSETS.LOGO_PRIMARY}`,
     `- REGISTRO_INPI_C9: ${BRAND_ASSETS.REGISTRO_INPI_C9}`,
     '',
@@ -798,6 +852,8 @@ export const BRAND_CONFIG = {
   identity: BRAND_IDENTITY,
   coreIdentityTriggers: CORE_IDENTITY_TRIGGERS,
   wsscbMandate: WSSCB_OPERATIONAL_MANDATE,
+  vnexxDisclosure: VNEXX_DISCLOSURE_POLICY,
+  wesleyContextTriggers: WESLEY_CONTEXT_TRIGGERS,
   developerProfile: BRAND_DEVELOPER_PROFILE,
   productLines: PRODUCT_LINES,
   officialPortfolio: OFFICIAL_PRODUCT_PORTFOLIO,

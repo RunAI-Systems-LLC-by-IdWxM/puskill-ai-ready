@@ -134,8 +134,8 @@ export async function handleEdgeChatPost(req: Request): Promise<Response> {
     return jsonError('Service unavailable', 503, 'missing_api_key');
   }
 
-  const { getTGhosTMinDEdgeSystemPrompt } = await import('@/lib/build-system-prompt');
-  const system = getTGhosTMinDEdgeSystemPrompt();
+  const { getRillEdgeSystemPrompt } = await import('@/lib/build-system-prompt');
+  const system = getRillEdgeSystemPrompt();
   const modelMessages = await toModelMessages(messages);
 
   const stream = createUIMessageStream({

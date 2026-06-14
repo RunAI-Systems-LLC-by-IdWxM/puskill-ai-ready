@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 
 const PLACEHOLDERS = [
-  'Peça ao TGhosT...',
+  'Peça ao Rill...',
   'Inicie a revolução AI Ready...',
   'Linha PUSKILL SYNAPSE...',
 ];
@@ -170,7 +170,7 @@ export default function Home() {
   } = useChat({
     transport: new DefaultChatTransport({ api: '/api/chat' }),
     onError: (chatError) => {
-      console.error('[TGhosT chat]', chatError);
+      console.error('[Rill chat]', chatError);
     },
   });
 
@@ -185,7 +185,7 @@ export default function Home() {
     clearError();
     void sendMessage({ text })
       .catch((submitError) => {
-        console.error('[TGhosT sendMessage]', submitError);
+        console.error('[Rill sendMessage]', submitError);
       })
       .finally(() => {
         submittingRef.current = false;
