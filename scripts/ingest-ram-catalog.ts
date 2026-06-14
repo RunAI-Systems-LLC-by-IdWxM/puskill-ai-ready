@@ -67,7 +67,7 @@ function ingest(): CatalogBundle {
   const manifest = buildManifest(records, batchFiles.length, duplicateIds);
 
   return {
-    version: 1,
+    version: 2,
     generated_at: ingestTimestamp,
     records,
     manifest,
@@ -100,7 +100,7 @@ export const CATALOG_BUNDLE = ${JSON.stringify(bundle, null, 2)} as const satisf
 writeFileSync(GENERATED_TS, generatedTs, 'utf8');
 
 console.log(
-  `Ingestão concluída: ${bundle.records.length} registros, ${bundle.manifest.batches_processed} lotes.`,
+  `Ingestão concluída: ${bundle.manifest.total_skus} SKUs, ${bundle.manifest.batches_processed} lotes.`,
 );
 console.log('Contagem por linha:', bundle.manifest.count_by_line);
 if (bundle.manifest.ids_with_warnings.length > 0) {

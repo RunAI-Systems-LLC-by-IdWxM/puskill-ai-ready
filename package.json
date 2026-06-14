@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "ingest:catalog": "node --import tsx scripts/ingest-ram-catalog.ts"
+    "prepare:catalog": "node scripts/prepare_for_ingest.js",
+    "ingest:catalog": "node --import tsx scripts/ingest-ram-catalog.ts",
+    "catalog:pipeline": "npm run prepare:catalog && npm run ingest:catalog"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.71",

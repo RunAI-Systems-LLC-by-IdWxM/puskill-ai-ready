@@ -5,8 +5,11 @@ import {
   type CatalogRecord,
   type CatalogRecordInput,
 } from '@/lib/catalog/ram/types';
-import { normalizeRamRecordInput } from '@/lib/catalog/ram/normalize';
-import { buildCatalogChunkText } from '@/lib/catalog/ram/chunk';
+import { normalizeCatalogRecordInput } from '@/lib/catalog/ram/normalize';
+import {
+  buildCatalogChunkText,
+  buildEmbeddingChunks,
+} from '@/lib/catalog/ram/chunk';
 
 const ID_PATTERN =
   /^PUSKILL-(VENENO|KILLBLADE|FUSE|DIAMOND)-[A-Z0-9-]+$/i;
@@ -94,20 +97,56 @@ function validateVoltage(type: string, voltage: number | null): string[] {
   return warnings;
 }
 
+function mergeWarnings(
+  yamlWarnings: unknown,
+  pipelineWarnings: string[],
+): string[] {
+  const fromYaml = Array.isArray(yamlWarnings)
+    ? yamlWarnings.map(String).filter(Boolean)
+    : [];
+  return [...new Set([...fromYaml, ...pipelineWarnings])];
+}
+
 export type ValidationResult =
   | { ok: true; record: CatalogRecordInput; warnings: string[] }
-  | { ok: false; errors: string[]; warnings: string[]; partial?: Partial<CatalogRecordInput> };
+  | {
+      ok: false;
+      errors: string[];
+      warnings: string[];
+      partial?: Partial<CatalogRecordInput>;
+    };
 
 export function validateCatalogRecordInput(
   raw: Record<string, unknown>,
 ): ValidationResult {
-  const warnings: string[] = [];
+  const pipelineWarnings: string[] = [];
   const errors: string[] = [];
-  const normalized = normalizeRamRecordInput(raw);
+  const normalized = normalizeCatalogRecordInput(raw);
 
-  for (const field of CATALOG_REQUIRED_FIELDS) {
-    if (!(field in raw)) {
-      errors.push(`campo obrigatório ausente: ${field}`);
+  const hasV2Block = raw.specs_table != null || raw.description_long != null;
+
+  if (hasV2Block) {
+    for (const field of [
+      'id',
+      'slug',
+      'title',
+      'specs_table',
+      'description_long',
+      'summary_for_index',
+      'meta_description',
+      'alt_text',
+      'source_doc',
+      'last_updated',
+    ] as const) {
+      if (!(field in raw)) {
+        errors.push(`campo obrigatório ausente: ${field}`);
+      }
+    }
+  } else {
+    for (const field of CATALOG_REQUIRED_FIELDS) {
+      if (!(field in raw) && field !== 'specs_table') {
+        errors.push(`campo obrigatório ausente: ${field}`);
+      }
     }
   }
 
@@ -115,17 +154,24 @@ export function validateCatalogRecordInput(
   if (!id) {
     errors.push('id inválido ou ausente');
   } else if (!ID_PATTERN.test(id)) {
-    warnings.push(
+    pipelineWarnings.push(
       `id=${id} não segue o padrão sugerido PUSKILL-<LINE>-<TYPE>-<FORMAT>-<CAPACITY>-<FREQ>`,
     );
   }
 
   if (normalized.brand !== PUSKILL_CATALOG_BRAND) {
-    errors.push(`brand deve ser ${PUSKILL_CATALOG_BRAND}, recebido: ${normalized.brand ?? 'null'}`);
+    errors.push(
+      `brand deve ser ${PUSKILL_CATALOG_BRAND}, recebido: ${normalized.brand ?? 'null'}`,
+    );
   }
 
   const line = normalized.line;
-  if (!line || !PUSKILL_CATALOG_LINES.includes(line as (typeof PUSKILL_CATALOG_LINES)[number])) {
+  if (
+    !line ||
+    !PUSKILL_CATALOG_LINES.includes(
+      line as (typeof PUSKILL_CATALOG_LINES)[number],
+    )
+  ) {
     errors.push(
       `line deve ser uma de ${PUSKILL_CATALOG_LINES.join(', ')}, recebido: ${line ?? 'null'}`,
     );
@@ -136,6 +182,8 @@ export function validateCatalogRecordInput(
   }
 
   const requiredStrings: Array<keyof CatalogRecordInput> = [
+    'slug',
+    'title',
     'format',
     'type',
     'chips',
@@ -143,8 +191,12 @@ export function validateCatalogRecordInput(
     'warranty',
     'packaging',
     'certifications',
-    'notes',
+    'description_long',
+    'summary_for_index',
+    'meta_description',
+    'alt_text',
     'source_doc',
+    'last_updated',
   ];
 
   for (const field of requiredStrings) {
@@ -154,19 +206,25 @@ export function validateCatalogRecordInput(
     }
   }
 
+  if (!normalized.specs_table) {
+    errors.push('specs_table inválido ou ausente');
+  }
+
   if (normalized.type && line) {
-    warnings.push(...validateLineType(line, normalized.type));
+    pipelineWarnings.push(...validateLineType(line, normalized.type));
   }
   if (normalized.format && normalized.pins != null && normalized.type) {
-    warnings.push(
+    pipelineWarnings.push(
       ...validatePins(normalized.format, normalized.pins, normalized.type),
     );
   }
   if (normalized.type && normalized.voltage_v !== undefined) {
-    warnings.push(
+    pipelineWarnings.push(
       ...validateVoltage(normalized.type, normalized.voltage_v ?? null),
     );
   }
+
+  const warnings = mergeWarnings(raw.validation_warnings, pipelineWarnings);
 
   if (errors.length > 0) {
     return { ok: false, errors, warnings, partial: normalized };
@@ -189,6 +247,7 @@ export function finalizeCatalogRecord(
     ingest_timestamp: ingestTimestamp,
     validation_warnings: warnings,
     chunk_text: buildCatalogChunkText(input),
+    embedding_chunks: buildEmbeddingChunks(input.description_long),
   };
 }
 
@@ -198,7 +257,8 @@ export function buildManifest(
   duplicateIds: string[],
 ): import('@/lib/catalog/ram/types').CatalogManifest {
   const countByLine: Record<string, number> = {};
-  const idsWithWarnings: Array<{ id: string; validation_warnings: string[] }> = [];
+  const idsWithWarnings: Array<{ id: string; validation_warnings: string[] }> =
+    [];
 
   for (const record of records) {
     countByLine[record.line] = (countByLine[record.line] ?? 0) + 1;
@@ -215,6 +275,7 @@ export function buildManifest(
   return {
     generated_at: new Date().toISOString(),
     source_doc: sourceDocs.join('; '),
+    total_skus: records.length,
     total_records: records.length,
     count_by_line: countByLine,
     ids: records.map((r) => r.id),

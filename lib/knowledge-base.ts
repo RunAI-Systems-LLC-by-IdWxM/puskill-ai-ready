@@ -20,23 +20,39 @@ export const CATALOG_RESPONSE_RULES = [
   'PROIBIDO gerar ou inferir preços em USD.',
   'Linhas oficiais: VENENO, KILLBLADE, FUSE, DIAMOND.',
   'DDR3/DDR3L → VENENO | DDR4 → KILLBLADE | DDR5 → FUSE | SSD/NVMe → DIAMOND.',
+  'RAG: recuperar summary_for_index + specs_table; anexar 1 embedding_chunk se necessário.',
+  'Reindexar embeddings somente quando last_updated mudar.',
 ] as const;
+
+function formatSpecsTable(record: CatalogRecord): string {
+  const s = record.specs_table;
+  return [
+    `capacity_gb=${s.capacity_gb}`,
+    s.frequency_mhz != null ? `frequency_mhz=${s.frequency_mhz}` : null,
+    s.voltage_v != null ? `voltage_v=${s.voltage_v}` : null,
+    s.pins != null ? `pins=${s.pins}` : null,
+    s.latency != null ? `latency=${s.latency}` : null,
+    `chips=${s.chips}`,
+    `application=${s.application}`,
+    `warranty=${s.warranty}`,
+    `packaging=${s.packaging}`,
+    `certifications=${s.certifications}`,
+  ]
+    .filter(Boolean)
+    .join(' | ');
+}
 
 function formatRecordLine(record: CatalogRecord): string {
   const fields = [
     `id=${record.id}`,
+    `title=${record.title}`,
     `line=${record.line}`,
     `type=${record.type}`,
     `format=${record.format}`,
-    `capacity_gb=${record.capacity_gb}`,
-    record.frequency_mhz != null ? `frequency_mhz=${record.frequency_mhz}` : null,
-    record.voltage_v != null ? `voltage_v=${record.voltage_v}` : null,
-    record.pins != null ? `pins=${record.pins}` : null,
-    record.latency != null ? `latency=${record.latency}` : null,
-    `warranty=${record.warranty}`,
-    `application=${record.application}`,
-    `certifications=${record.certifications}`,
-    record.description_short ? `description_short=${record.description_short}` : null,
+    formatSpecsTable(record),
+    `summary_for_index=${record.summary_for_index}`,
+    `meta_description=${record.meta_description}`,
+    `last_updated=${record.last_updated}`,
     `source_doc=${record.source_doc}`,
   ].filter(Boolean);
 
@@ -44,7 +60,7 @@ function formatRecordLine(record: CatalogRecord): string {
 }
 
 export function getHardwareCatalogContext(): string {
-  const { count_by_line, total_records, ids_with_warnings } =
+  const { count_by_line, total_skus, ids_with_warnings } =
     HARDWARE_CATALOG_MANIFEST;
 
   const linesSummary = Object.entries(count_by_line)
@@ -64,13 +80,13 @@ export function getHardwareCatalogContext(): string {
 
   return [
     '## CATÁLOGO CANÔNICO DE HARDWARE PUSKILL',
-    `Total indexado: ${total_records} SKUs (${linesSummary}).`,
-    'Fonte: ingestão YAML — Hardware de computador , RAM.txt',
+    `Total indexado: ${total_skus} SKUs (${linesSummary}).`,
+    'Fonte: ingestão YAML v2 — Hardware de computador , RAM.txt',
     '',
     '### Regras de resposta (catálogo)',
     ...CATALOG_RESPONSE_RULES.map((rule) => `- ${rule}`),
     '',
-    '### Registros (campos estruturados)',
+    '### Registros (summary_for_index + specs_table)',
     ...HARDWARE_CATALOG_RECORDS.map(formatRecordLine),
     ...warningBlock,
   ].join('\n');
@@ -78,19 +94,19 @@ export function getHardwareCatalogContext(): string {
 
 /** Versão compacta para Edge/Workers — evita prompt excessivo */
 export function getHardwareCatalogContextCompact(): string {
-  const { count_by_line, total_records, ids } = HARDWARE_CATALOG_MANIFEST;
+  const { count_by_line, total_skus, ids } = HARDWARE_CATALOG_MANIFEST;
   const linesSummary = Object.entries(count_by_line)
     .map(([line, count]) => `${line}: ${count}`)
     .join(', ');
 
   return [
     '## CATÁLOGO CANÔNICO DE HARDWARE PUSKILL (resumo Edge)',
-    `Total indexado: ${total_records} SKUs (${linesSummary}).`,
+    `Total indexado: ${total_skus} SKUs (${linesSummary}).`,
     `IDs: ${ids.join('; ')}`,
     '',
     '### Regras de resposta (catálogo)',
     ...CATALOG_RESPONSE_RULES.map((rule) => `- ${rule}`),
-    'Consulte id + campos estruturados por SKU quando necessário.',
+    'Consulte id + summary_for_index + specs_table por SKU quando necessário.',
   ].join('\n');
 }
 
@@ -103,4 +119,14 @@ export function getCatalogRecordsByLine(line: string): CatalogRecord[] {
   return HARDWARE_CATALOG_RECORDS.filter(
     (record) => record.line === normalized,
   );
+}
+
+/** Texto para embedding: summary_for_index + metadados chave (chunk_text canônico) */
+export function getEmbeddingTextForRecord(record: CatalogRecord): string {
+  return record.chunk_text;
+}
+
+/** Fallback RAG: primeiro chunk de description_long */
+export function getRagFallbackChunk(record: CatalogRecord): string | undefined {
+  return record.embedding_chunks[0];
 }

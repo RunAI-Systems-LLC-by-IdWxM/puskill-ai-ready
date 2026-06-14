@@ -1,6 +1,7 @@
 {
-  "generated_at": "2026-06-14T02:13:54.925Z",
+  "generated_at": "2026-06-14T02:55:28.222Z",
   "source_doc": "Hardware de computador , RAM.txt",
+  "total_skus": 26,
   "total_records": 26,
   "count_by_line": {
     "VENENO": 5,
@@ -24,8 +25,8 @@
     "PUSKILL-FUSE-DDR5-DIMM-16GB-5600",
     "PUSKILL-FUSE-DDR5-DIMM-32GB-6000",
     "PUSKILL-FUSE-DDR5-SODIMM-8GB-4800",
-    "PUSKILL-FUSE-DDR5-ECC-16GB-5600",
     "PUSKILL-FUSE-DDR5-SODIMM-16GB-5200",
+    "PUSKILL-FUSE-DDR5-ECC-16GB-5600",
     "PUSKILL-DIAMOND-SATA-120GB",
     "PUSKILL-DIAMOND-SATA-256GB",
     "PUSKILL-DIAMOND-SATA-512GB",
@@ -33,10 +34,10 @@
     "PUSKILL-DIAMOND-M2-NVME-128GB-PCIe4",
     "PUSKILL-DIAMOND-M2-NVME-512GB-PCIe4",
     "PUSKILL-DIAMOND-M2-NVME-1TB-PCIe4",
-    "PUSKILL-DIAMOND-SATA-ENDURANCE-512GB",
-    "PUSKILL-DIAMOND-M2-BLACKDIAMOND-1TB"
+    "PUSKILL-DIAMOND-M2-BLACKDIAMOND-1TB",
+    "PUSKILL-DIAMOND-SATA-ENDURANCE-512GB"
   ],
   "ids_with_warnings": [],
   "duplicate_ids": [],
-  "batches_processed": 4
+  "batches_processed": 1
 }

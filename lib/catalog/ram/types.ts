@@ -10,9 +10,11 @@ export type PuskillCatalogLine = (typeof PUSKILL_CATALOG_LINES)[number];
 
 export const PUSKILL_CATALOG_BRAND = 'PUSKILL' as const;
 
-/** Campos obrigatórios — presença obrigatória; valor pode ser null quando não aplicável */
+/** Campos obrigatórios no registro canônico (valor pode ser null quando não aplicável) */
 export const CATALOG_REQUIRED_FIELDS = [
   'id',
+  'slug',
+  'title',
   'brand',
   'line',
   'format',
@@ -27,14 +29,33 @@ export const CATALOG_REQUIRED_FIELDS = [
   'warranty',
   'packaging',
   'certifications',
-  'notes',
+  'description_long',
+  'summary_for_index',
+  'meta_description',
+  'alt_text',
   'source_doc',
+  'last_updated',
 ] as const;
 
 export type CatalogRequiredField = (typeof CATALOG_REQUIRED_FIELDS)[number];
 
+export type CatalogSpecsTable = {
+  capacity_gb: number;
+  frequency_mhz: number | null;
+  voltage_v: number | null;
+  pins: number | null;
+  latency: string | null;
+  chips: string;
+  application: string;
+  warranty: string;
+  packaging: string;
+  certifications: string;
+};
+
 export type CatalogRecordInput = {
   id: string;
+  slug: string;
+  title: string;
   brand: string;
   line: string;
   format: string;
@@ -49,8 +70,16 @@ export type CatalogRecordInput = {
   warranty: string;
   packaging: string;
   certifications: string;
-  notes: string;
+  specs_table: CatalogSpecsTable;
+  description_long: string;
+  summary_for_index: string;
+  meta_description: string;
+  alt_text: string;
   source_doc: string;
+  last_updated: string;
+  /** @deprecated v1 — use description_long */
+  notes?: string;
+  /** @deprecated v1 — use summary_for_index */
   description_short?: string | null;
 };
 
@@ -58,11 +87,14 @@ export type CatalogRecord = CatalogRecordInput & {
   ingest_timestamp: string;
   validation_warnings: string[];
   chunk_text: string;
+  embedding_chunks: string[];
 };
 
 export type CatalogManifest = {
   generated_at: string;
   source_doc: string;
+  total_skus: number;
+  /** @deprecated Use total_skus */
   total_records: number;
   count_by_line: Record<string, number>;
   ids: string[];
@@ -72,7 +104,7 @@ export type CatalogManifest = {
 };
 
 export type CatalogBundle = {
-  version: 1;
+  version: 2;
   generated_at: string;
   records: CatalogRecord[];
   manifest: CatalogManifest;
