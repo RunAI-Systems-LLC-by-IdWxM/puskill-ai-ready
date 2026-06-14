@@ -1,87 +1,45 @@
+import { createUIMessageStream, createUIMessageStreamResponse } from 'ai';
+import type { UIMessage } from 'ai';
+
 type ChatRole = 'user' | 'assistant' | 'system';
-
-type TextPart = { type: 'text'; text: string };
-
-export type EdgeUIMessage = {
-  id?: string;
-  role: ChatRole;
-  parts: TextPart[];
-};
 
 const VALID_ROLES = new Set<ChatRole>(['user', 'assistant', 'system']);
 
-function jsonError(message: string, status: number): Response {
-  return Response.json({ error: message }, { status });
+function jsonError(message: string, status: number, code?: string): Response {
+  return Response.json({ error: message, code }, { status });
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-/** Aceita UIMessage v6 com parts mistos (step-start, text, etc.) e extrai só texto */
-function normalizeIncomingMessage(raw: unknown): EdgeUIMessage | null {
-  if (!isRecord(raw)) return null;
-
-  const role = raw.role;
-  if (typeof role !== 'string' || !VALID_ROLES.has(role as ChatRole)) return null;
-
-  const textParts: TextPart[] = [];
-
-  if (Array.isArray(raw.parts)) {
-    for (const part of raw.parts) {
-      if (!isRecord(part) || part.type !== 'text' || typeof part.text !== 'string') {
-        continue;
-      }
-      textParts.push({ type: 'text', text: part.text });
-    }
-  } else if (typeof raw.content === 'string') {
-    textParts.push({ type: 'text', text: raw.content });
+function isUIMessageLike(raw: unknown): raw is UIMessage {
+  if (!isRecord(raw)) return false;
+  if (typeof raw.role !== 'string' || !VALID_ROLES.has(raw.role as ChatRole)) {
+    return false;
   }
-
-  if (role === 'user' && textParts.every((part) => part.text.trim().length === 0)) {
-    return null;
-  }
-
-  return {
-    id: typeof raw.id === 'string' ? raw.id : undefined,
-    role: role as ChatRole,
-    parts: textParts,
-  };
-}
-
-function hasUserText(messages: EdgeUIMessage[]): boolean {
-  return messages.some(
-    (message) =>
-      message.role === 'user' &&
-      message.parts.some((part) => part.type === 'text' && part.text.trim().length > 0),
+  if (!Array.isArray(raw.parts)) return false;
+  return raw.parts.every(
+    (part) =>
+      isRecord(part) &&
+      typeof part.type === 'string' &&
+      (part.type !== 'text' || typeof part.text === 'string'),
   );
 }
 
-function toOpenAIMessages(messages: EdgeUIMessage[]) {
-  return messages
-    .map((message) => ({
-      role: message.role,
-      content: message.parts
-        .filter((part) => part.type === 'text')
-        .map((part) => part.text)
-        .join(''),
-    }))
-    .filter((message) => message.content.trim().length > 0);
+function hasUserText(messages: UIMessage[]): boolean {
+  return messages.some(
+    (message) =>
+      message.role === 'user' &&
+      message.parts.some(
+        (part) => part.type === 'text' && part.text.trim().length > 0,
+      ),
+  );
 }
 
-function createUiMessageStreamResponse(stream: ReadableStream<Uint8Array>): Response {
-  return new Response(stream, {
-    headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      Connection: 'keep-alive',
-      'x-vercel-ai-ui-message-stream': 'v1',
-    },
-  });
-}
-
-function encodeSseEvent(payload: Record<string, unknown>): Uint8Array {
-  return new TextEncoder().encode(`data: ${JSON.stringify(payload)}\n\n`);
+async function toModelMessages(messages: UIMessage[]) {
+  const { convertToModelMessages } = await import('ai');
+  return convertToModelMessages(messages);
 }
 
 async function* parseOpenAIStream(
@@ -124,97 +82,106 @@ export async function handleEdgeChatPost(req: Request): Promise<Response> {
   try {
     body = await req.json();
   } catch {
-    return jsonError('Invalid JSON body', 400);
+    return jsonError('Invalid JSON body', 400, 'invalid_json');
   }
 
   if (!isRecord(body)) {
-    return jsonError('Invalid request body', 400);
+    return jsonError('Invalid request body', 400, 'invalid_body');
   }
 
-  const { messages } = body;
+  const rawMessages = body.messages;
 
-  if (!messages || !Array.isArray(messages)) {
-    return jsonError('messages must be an array', 400);
+  if (!rawMessages || !Array.isArray(rawMessages)) {
+    return jsonError('messages must be an array', 400, 'messages_not_array');
   }
 
-  if (messages.length === 0 || messages.length > 50) {
-    return jsonError('messages array size is invalid', 400);
+  if (rawMessages.length === 0 || rawMessages.length > 50) {
+    return jsonError('messages array size is invalid', 400, 'messages_size_invalid');
   }
 
-  const uiMessages = messages
-    .map(normalizeIncomingMessage)
-    .filter((message): message is EdgeUIMessage => message !== null);
-
-  if (uiMessages.length === 0) {
-    return jsonError('Invalid message format in array', 400);
+  if (!rawMessages.every(isUIMessageLike)) {
+    console.error(
+      '[api/chat] invalid message shape',
+      JSON.stringify(
+        rawMessages.map((m) =>
+          isRecord(m)
+            ? {
+                role: m.role,
+                partTypes: Array.isArray(m.parts)
+                  ? m.parts.map((p) => (isRecord(p) ? p.type : '?'))
+                  : 'no-parts',
+              }
+            : m,
+        ),
+      ),
+    );
+    return jsonError('Invalid message format in array', 400, 'invalid_message_format');
   }
 
-  if (!hasUserText(uiMessages)) {
-    return jsonError('At least one user message with text is required', 400);
+  const messages = rawMessages as UIMessage[];
+
+  if (!hasUserText(messages)) {
+    return jsonError(
+      'At least one user message with text is required',
+      400,
+      'missing_user_text',
+    );
   }
 
   const { getOpenAIApiKey } = await import('@/lib/openai-api-key');
   const apiKey = getOpenAIApiKey();
   if (!apiKey) {
-    return jsonError('Service unavailable', 503);
+    return jsonError('Service unavailable', 503, 'missing_api_key');
   }
 
   const { getTGhosTMinDEdgeSystemPrompt } = await import('@/lib/build-system-prompt');
   const system = getTGhosTMinDEdgeSystemPrompt();
+  const modelMessages = await toModelMessages(messages);
 
-  const upstream = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      stream: true,
-      messages: [
-        { role: 'system', content: system },
-        ...toOpenAIMessages(uiMessages),
-      ],
-    }),
-    signal: req.signal,
-  });
+  const stream = createUIMessageStream({
+    originalMessages: messages,
+    execute: async ({ writer }) => {
+      const upstream = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          stream: true,
+          messages: [{ role: 'system', content: system }, ...modelMessages],
+        }),
+        signal: req.signal,
+      });
 
-  if (!upstream.ok) {
-    const detail = await upstream.text();
-    console.error('[api/chat] OpenAI upstream error:', upstream.status, detail);
-    return jsonError('Upstream model error', 502);
-  }
-
-  const messageId = `msg_${crypto.randomUUID().replace(/-/g, '')}`;
-  const textPartId = `text_${crypto.randomUUID().replace(/-/g, '')}`;
-  const openAIStream = parseOpenAIStream(upstream.body);
-
-  const sseStream = new ReadableStream<Uint8Array>({
-    async start(controller) {
-      try {
-        controller.enqueue(
-          encodeSseEvent({ type: 'start', messageId }),
-        );
-        controller.enqueue(
-          encodeSseEvent({ type: 'text-start', id: textPartId }),
-        );
-
-        for await (const delta of openAIStream) {
-          controller.enqueue(
-            encodeSseEvent({ type: 'text-delta', id: textPartId, delta }),
-          );
-        }
-
-        controller.enqueue(encodeSseEvent({ type: 'text-end', id: textPartId }));
-        controller.enqueue(encodeSseEvent({ type: 'finish' }));
-        controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
-        controller.close();
-      } catch (error) {
-        console.error('[api/chat] stream transform error:', error);
-        controller.error(error);
+      if (!upstream.ok) {
+        const detail = await upstream.text();
+        console.error('[api/chat] OpenAI upstream error:', upstream.status, detail);
+        writer.write({
+          type: 'error',
+          errorText: 'Upstream model error',
+        });
+        return;
       }
+
+      const textPartId = `text_${crypto.randomUUID().replace(/-/g, '')}`;
+      writer.write({ type: 'start-step' });
+      writer.write({ type: 'text-start', id: textPartId });
+
+      for await (const delta of parseOpenAIStream(upstream.body)) {
+        writer.write({ type: 'text-delta', id: textPartId, delta });
+      }
+
+      writer.write({ type: 'text-end', id: textPartId });
+      writer.write({ type: 'finish-step' });
+      writer.write({ type: 'finish', finishReason: 'stop' });
+    },
+    onError: (error) => {
+      console.error('[api/chat] stream error:', error);
+      return 'Stream processing failed';
     },
   });
 
-  return createUiMessageStreamResponse(sseStream);
+  return createUIMessageStreamResponse({ stream });
 }

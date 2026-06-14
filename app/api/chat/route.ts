@@ -6,6 +6,7 @@ export async function POST(req: Request) {
     return await handleEdgeChatPost(req);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+    console.error('[api/chat] route error:', message);
     return Response.json({ error: 'worker_boot_failed', message }, { status: 500 });
   }
 }

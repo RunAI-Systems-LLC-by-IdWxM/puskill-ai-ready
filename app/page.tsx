@@ -29,13 +29,18 @@ const HARDWARE_IMAGES = [
   'https://images.unsplash.com/photo-1555617981-dac3880eac6e?w=400&h=300&fit=crop',
 ];
 
-function useTypewriterPlaceholder(placeholders: string[]) {
+function useTypewriterPlaceholder(placeholders: string[], enabled: boolean) {
   const [text, setText] = useState('');
   const [index, setIndex] = useState(0);
   const [charIndex, setCharIndex] = useState(0);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
+    if (!enabled) {
+      setText('');
+      return;
+    }
+
     const current = placeholders[index];
     const speed = deleting ? 35 : 70;
 
@@ -57,9 +62,9 @@ function useTypewriterPlaceholder(placeholders: string[]) {
     }, speed);
 
     return () => clearTimeout(timeout);
-  }, [charIndex, deleting, index, placeholders]);
+  }, [charIndex, deleting, enabled, index, placeholders]);
 
-  return text;
+  return enabled ? text : placeholders[0];
 }
 
 function IconButton({
@@ -147,6 +152,13 @@ function SendIcon() {
 
 export default function Home() {
   const [input, setInput] = useState('');
+  const [mounted, setMounted] = useState(false);
+  const submittingRef = useRef(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const {
     messages,
     sendMessage,
@@ -154,8 +166,12 @@ export default function Home() {
     stop,
     setMessages,
     error,
+    clearError,
   } = useChat({
     transport: new DefaultChatTransport({ api: '/api/chat' }),
+    onError: (chatError) => {
+      console.error('[TGhosT chat]', chatError);
+    },
   });
 
   const isLoading = status === 'streaming' || status === 'submitted';
@@ -163,12 +179,21 @@ export default function Home() {
   const handleSubmit = (event?: FormEvent) => {
     event?.preventDefault();
     const text = input.trim();
-    if (!text || isLoading) return;
-    sendMessage({ text });
+    if (!text || isLoading || submittingRef.current) return;
+
+    submittingRef.current = true;
+    clearError();
+    void sendMessage({ text })
+      .catch((submitError) => {
+        console.error('[TGhosT sendMessage]', submitError);
+      })
+      .finally(() => {
+        submittingRef.current = false;
+      });
     setInput('');
   };
 
-  const placeholder = useTypewriterPlaceholder(PLACEHOLDERS);
+  const placeholder = useTypewriterPlaceholder(PLACEHOLDERS, mounted);
   const scrollImages = [...HARDWARE_IMAGES, ...HARDWARE_IMAGES];
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -382,11 +407,16 @@ export default function Home() {
                 </div>
               )}
 
-              {error && (
+              {error && status === 'error' && (
                 <div className="flex justify-start">
                   <p className="max-w-[85%] rounded-3xl border border-red-500/30 bg-red-950/40 px-5 py-3 text-sm text-red-200">
                     O motor cognitivo está indisponível no momento. Tente novamente em
                     instantes.
+                    {process.env.NODE_ENV === 'development' ? (
+                      <span className="mt-2 block text-xs text-red-300/90">
+                        {error.message}
+                      </span>
+                    ) : null}
                   </p>
                 </div>
               )}
@@ -437,6 +467,7 @@ export default function Home() {
                   placeholder={placeholder}
                   rows={1}
                   disabled={isLoading}
+                  suppressHydrationWarning
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
