@@ -1,11 +1,13 @@
 'use client';
 
-import { useChat } from 'ai/react';
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
 import { AssistantMessage } from '@/components/assistant-message';
 import { BRAND_FOOTER } from '@/lib/brand-config';
+import { getUIMessageText } from '@/lib/get-ui-message-text';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 
 const PLACEHOLDERS = [
   'Peça ao TGhosT...',
@@ -144,16 +146,27 @@ function SendIcon() {
 }
 
 export default function Home() {
+  const [input, setInput] = useState('');
   const {
     messages,
-    input,
-    handleInputChange,
-    handleSubmit,
-    isLoading,
+    sendMessage,
+    status,
     stop,
     setMessages,
     error,
-  } = useChat({ api: '/api/chat' });
+  } = useChat({
+    transport: new DefaultChatTransport({ api: '/api/chat' }),
+  });
+
+  const isLoading = status === 'streaming' || status === 'submitted';
+
+  const handleSubmit = (event?: FormEvent) => {
+    event?.preventDefault();
+    const text = input.trim();
+    if (!text || isLoading) return;
+    sendMessage({ text });
+    setInput('');
+  };
 
   const placeholder = useTypewriterPlaceholder(PLACEHOLDERS);
   const scrollImages = [...HARDWARE_IMAGES, ...HARDWARE_IMAGES];
@@ -351,9 +364,9 @@ export default function Home() {
                     }`}
                   >
                     {message.role === 'assistant' ? (
-                      <AssistantMessage content={message.content} />
+                      <AssistantMessage content={getUIMessageText(message)} />
                     ) : (
-                      <p className="whitespace-pre-line">{message.content}</p>
+                      <p className="whitespace-pre-line">{getUIMessageText(message)}</p>
                     )}
                   </div>
                 </div>
@@ -420,7 +433,7 @@ export default function Home() {
                 <textarea
                   ref={textareaRef}
                   value={input}
-                  onChange={handleInputChange}
+                  onChange={(event) => setInput(event.target.value)}
                   placeholder={placeholder}
                   rows={1}
                   disabled={isLoading}

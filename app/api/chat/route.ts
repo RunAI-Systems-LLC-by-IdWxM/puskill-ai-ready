@@ -1,41 +1,25 @@
-import { streamText } from 'ai';
+import { streamText, convertToModelMessages, type UIMessage } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
-import { getBrandLegalSystemContext } from '@/lib/brand-config';
+import { buildTGhosTMinDSystemPrompt } from '@/lib/build-system-prompt';
 import { getOpenAIApiKey } from '@/lib/openai-api-key';
-import { PUSKILL_MASTER_DOCUMENT } from '@/lib/pmd';
-import { getTGhosTMinDPersonaContext } from '@/lib/tghostmind-persona';
 
 export const runtime = 'edge';
-
-const PROMPT_SEPARATOR = '\n\n---\n\n';
-
-/** PMD (hardware) + Brand & Legal Hub + Persona TGhosTMinD — Edge-safe */
-const TGhosTMinD_SYSTEM_PROMPT = [
-  getTGhosTMinDPersonaContext(),
-  PUSKILL_MASTER_DOCUMENT,
-  getBrandLegalSystemContext(),
-].join(PROMPT_SEPARATOR);
 
 const VALID_ROLES = new Set(['user', 'assistant', 'system'] as const);
 
 type ValidRole = 'user' | 'assistant' | 'system';
 
-type ValidMessage = {
-  role: ValidRole;
-  content: string;
-};
-
-function isValidMessage(message: unknown): message is ValidMessage {
+function isValidUIMessage(message: unknown): message is UIMessage {
   if (typeof message !== 'object' || message === null) return false;
 
-  const { role, content } = message as Record<string, unknown>;
+  const { role, parts } = message as Record<string, unknown>;
 
   return (
     typeof role === 'string' &&
     VALID_ROLES.has(role as ValidRole) &&
-    typeof content === 'string' &&
-    content.length > 0 &&
-    content.length <= 4000
+    Array.isArray(parts) &&
+    parts.length > 0 &&
+    parts.length <= 32
   );
 }
 
@@ -80,7 +64,7 @@ export async function POST(req: Request) {
     );
   }
 
-  if (!messages.every(isValidMessage)) {
+  if (!messages.every(isValidUIMessage)) {
     return new Response(
       JSON.stringify({ error: 'Invalid message format in array' }),
       {
@@ -103,9 +87,9 @@ export async function POST(req: Request) {
 
   const result = streamText({
     model: openai('gpt-4o-mini'),
-    system: TGhosTMinD_SYSTEM_PROMPT,
-    messages,
+    system: buildTGhosTMinDSystemPrompt(),
+    messages: await convertToModelMessages(messages),
   });
 
-  return result.toDataStreamResponse();
+  return result.toUIMessageStreamResponse();
 }
