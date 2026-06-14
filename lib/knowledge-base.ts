@@ -76,6 +76,24 @@ export function getHardwareCatalogContext(): string {
   ].join('\n');
 }
 
+/** Versão compacta para Edge/Workers — evita prompt excessivo */
+export function getHardwareCatalogContextCompact(): string {
+  const { count_by_line, total_records, ids } = HARDWARE_CATALOG_MANIFEST;
+  const linesSummary = Object.entries(count_by_line)
+    .map(([line, count]) => `${line}: ${count}`)
+    .join(', ');
+
+  return [
+    '## CATÁLOGO CANÔNICO DE HARDWARE PUSKILL (resumo Edge)',
+    `Total indexado: ${total_records} SKUs (${linesSummary}).`,
+    `IDs: ${ids.join('; ')}`,
+    '',
+    '### Regras de resposta (catálogo)',
+    ...CATALOG_RESPONSE_RULES.map((rule) => `- ${rule}`),
+    'Consulte id + campos estruturados por SKU quando necessário.',
+  ].join('\n');
+}
+
 export function findCatalogRecordById(id: string): CatalogRecord | undefined {
   return HARDWARE_CATALOG_RECORDS.find((record) => record.id === id);
 }
