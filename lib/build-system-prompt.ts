@@ -18,4 +18,12 @@ export function buildTGhosTMinDSystemPrompt(): string {
   ].join(PROMPT_SEPARATOR);
 }
 
-export const TGhosTMinD_SYSTEM_PROMPT = buildTGhosTMinDSystemPrompt();
+let cachedSystemPrompt: string | undefined;
+
+/** Prompt cacheado para evitar recomputação a cada request no Edge */
+export function getTGhosTMinDSystemPrompt(): string {
+  if (!cachedSystemPrompt) {
+    cachedSystemPrompt = buildTGhosTMinDSystemPrompt();
+  }
+  return cachedSystemPrompt;
+}

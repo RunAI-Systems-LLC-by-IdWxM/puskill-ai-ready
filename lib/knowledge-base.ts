@@ -1,12 +1,12 @@
 /**
- * Base de conhecimento canônica PUSKILL — Edge-safe (import JSON, sem fs).
+ * Base de conhecimento canônica PUSKILL — Edge-safe (TS bundle, sem fs/JSON).
  * Registros ingeridos de data/catalog/ram/blocks/*.yaml via scripts/ingest-ram-catalog.ts
  */
 
-import catalogBundle from '@/data/catalog/ram/catalog.json';
+import { CATALOG_BUNDLE } from '@/lib/catalog/ram/catalog.generated';
 import type { CatalogBundle, CatalogRecord } from '@/lib/catalog/ram/types';
 
-export const HARDWARE_CATALOG = catalogBundle as CatalogBundle;
+export const HARDWARE_CATALOG = CATALOG_BUNDLE as CatalogBundle;
 
 export const HARDWARE_CATALOG_RECORDS: readonly CatalogRecord[] =
   HARDWARE_CATALOG.records;

@@ -1,6 +1,5 @@
 /**
- * Resolve OpenAI API key across local and Vercel-compatible env names.
- * Vercel keys allow only letters, numbers, and underscores — not hyphens.
+ * Resolve OpenAI API key across local, Vercel and Cloudflare Pages env names.
  */
 const API_KEY_ENV_NAMES = [
   'OPENAI_API_KEY',
@@ -17,4 +16,4 @@ export function getOpenAIApiKey(): string | undefined {
 }
 
 export const OPENAI_API_KEY_ENV_HINT =
-  'Configure OPENAI_API_KEY (recomendado) ou PUSKILL_AI_READY_API_KEY no painel de deploy.';
+  'Configure OPENAI_API_KEY no painel do deploy (Cloudflare Pages: Settings > Environment variables > Production).';
