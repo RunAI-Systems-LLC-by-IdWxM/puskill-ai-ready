@@ -144,7 +144,7 @@ export function validateCatalogRecordInput(
     }
   } else {
     for (const field of CATALOG_REQUIRED_FIELDS) {
-      if (!(field in raw) && field !== 'specs_table') {
+      if (!(field in raw)) {
         errors.push(`campo obrigatório ausente: ${field}`);
       }
     }

@@ -167,7 +167,10 @@ export function normalizeCatalogRecordInput(
     alt_text: normalizeString(expanded.alt_text) ?? undefined,
     source_doc: normalizeString(expanded.source_doc) ?? undefined,
     last_updated: normalizeString(expanded.last_updated) ?? undefined,
-    notes: expanded.notes != null ? truncateText(stripUsdPrices(String(expanded.notes))) : undefined,
+    notes:
+      expanded.notes != null
+        ? truncateText(stripUsdPrices(String(expanded.notes)), MAX_LONG_TEXT_CHARS)
+        : undefined,
     description_short:
       expanded.description_short != null
         ? truncateText(stripUsdPrices(String(expanded.description_short)), 600)
