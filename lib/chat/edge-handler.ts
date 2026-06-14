@@ -14,18 +14,39 @@ function jsonError(message: string, status: number): Response {
   return Response.json({ error: message }, { status });
 }
 
-function isEdgeUIMessage(message: unknown): message is EdgeUIMessage {
-  if (typeof message !== 'object' || message === null) return false;
-  const { role, parts } = message as Record<string, unknown>;
-  if (typeof role !== 'string' || !VALID_ROLES.has(role as ChatRole)) return false;
-  if (!Array.isArray(parts) || parts.length === 0 || parts.length > 32) return false;
-  return parts.every(
-    (part) =>
-      typeof part === 'object' &&
-      part !== null &&
-      (part as TextPart).type === 'text' &&
-      typeof (part as TextPart).text === 'string',
-  );
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+/** Aceita UIMessage v6 com parts mistos (step-start, text, etc.) e extrai só texto */
+function normalizeIncomingMessage(raw: unknown): EdgeUIMessage | null {
+  if (!isRecord(raw)) return null;
+
+  const role = raw.role;
+  if (typeof role !== 'string' || !VALID_ROLES.has(role as ChatRole)) return null;
+
+  const textParts: TextPart[] = [];
+
+  if (Array.isArray(raw.parts)) {
+    for (const part of raw.parts) {
+      if (!isRecord(part) || part.type !== 'text' || typeof part.text !== 'string') {
+        continue;
+      }
+      textParts.push({ type: 'text', text: part.text });
+    }
+  } else if (typeof raw.content === 'string') {
+    textParts.push({ type: 'text', text: raw.content });
+  }
+
+  if (role === 'user' && textParts.every((part) => part.text.trim().length === 0)) {
+    return null;
+  }
+
+  return {
+    id: typeof raw.id === 'string' ? raw.id : undefined,
+    role: role as ChatRole,
+    parts: textParts,
+  };
 }
 
 function hasUserText(messages: EdgeUIMessage[]): boolean {
@@ -54,6 +75,7 @@ function createUiMessageStreamResponse(stream: ReadableStream<Uint8Array>): Resp
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       Connection: 'keep-alive',
+      'x-vercel-ai-ui-message-stream': 'v1',
     },
   });
 }
@@ -105,11 +127,11 @@ export async function handleEdgeChatPost(req: Request): Promise<Response> {
     return jsonError('Invalid JSON body', 400);
   }
 
-  if (typeof body !== 'object' || body === null) {
+  if (!isRecord(body)) {
     return jsonError('Invalid request body', 400);
   }
 
-  const { messages } = body as Record<string, unknown>;
+  const { messages } = body;
 
   if (!messages || !Array.isArray(messages)) {
     return jsonError('messages must be an array', 400);
@@ -119,11 +141,14 @@ export async function handleEdgeChatPost(req: Request): Promise<Response> {
     return jsonError('messages array size is invalid', 400);
   }
 
-  if (!messages.every(isEdgeUIMessage)) {
+  const uiMessages = messages
+    .map(normalizeIncomingMessage)
+    .filter((message): message is EdgeUIMessage => message !== null);
+
+  if (uiMessages.length === 0) {
     return jsonError('Invalid message format in array', 400);
   }
 
-  const uiMessages = messages as EdgeUIMessage[];
   if (!hasUserText(uiMessages)) {
     return jsonError('At least one user message with text is required', 400);
   }
@@ -161,24 +186,27 @@ export async function handleEdgeChatPost(req: Request): Promise<Response> {
   }
 
   const messageId = `msg_${crypto.randomUUID().replace(/-/g, '')}`;
+  const textPartId = `text_${crypto.randomUUID().replace(/-/g, '')}`;
   const openAIStream = parseOpenAIStream(upstream.body);
 
   const sseStream = new ReadableStream<Uint8Array>({
     async start(controller) {
       try {
-        controller.enqueue(encodeSseEvent({ type: 'start' }));
-        controller.enqueue(encodeSseEvent({ type: 'start-step' }));
-        controller.enqueue(encodeSseEvent({ type: 'text-start', id: messageId }));
+        controller.enqueue(
+          encodeSseEvent({ type: 'start', messageId }),
+        );
+        controller.enqueue(
+          encodeSseEvent({ type: 'text-start', id: textPartId }),
+        );
 
         for await (const delta of openAIStream) {
           controller.enqueue(
-            encodeSseEvent({ type: 'text-delta', id: messageId, delta }),
+            encodeSseEvent({ type: 'text-delta', id: textPartId, delta }),
           );
         }
 
-        controller.enqueue(encodeSseEvent({ type: 'text-end', id: messageId }));
-        controller.enqueue(encodeSseEvent({ type: 'finish-step' }));
-        controller.enqueue(encodeSseEvent({ type: 'finish', finishReason: 'stop' }));
+        controller.enqueue(encodeSseEvent({ type: 'text-end', id: textPartId }));
+        controller.enqueue(encodeSseEvent({ type: 'finish' }));
         controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
         controller.close();
       } catch (error) {
