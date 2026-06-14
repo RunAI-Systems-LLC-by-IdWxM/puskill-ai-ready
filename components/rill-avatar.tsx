@@ -1,5 +1,3 @@
-'use client';
-
 import Image from 'next/image';
 import { BRAND_ASSETS } from '@/lib/brand-config';
 import styles from './rill-avatar.module.css';
@@ -8,30 +6,30 @@ type RillAvatarProps = {
   size?: number;
   label?: string;
   className?: string;
-  animated?: boolean;
+  pulse?: boolean;
 };
 
 export function RillAvatar({
   size = 26,
   label = 'Rill',
-  className,
-  animated = true,
+  className = '',
+  pulse = true,
 }: RillAvatarProps) {
-  const animationClass = animated ? styles.animated : '';
-
   return (
-    <span
-      className={`${styles.avatar} ${animationClass} ${className ?? ''}`}
+    <div
+      className={`relative shrink-0 ${pulse ? styles.pulse : ''} ${className}`}
       style={{ width: size, height: size }}
+      role="img"
+      aria-label={label}
     >
       <Image
         src={BRAND_ASSETS.RILL_AVATAR}
         alt={label}
         width={size}
         height={size}
-        className={styles.image}
+        className="h-full w-full object-contain"
         unoptimized
       />
-    </span>
+    </div>
   );
 }

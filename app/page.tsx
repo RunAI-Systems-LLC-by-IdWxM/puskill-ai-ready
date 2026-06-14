@@ -3,7 +3,6 @@
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { AssistantMessage } from '@/components/assistant-message';
-import { RillAvatar } from '@/components/rill-avatar';
 import { BRAND_FOOTER } from '@/lib/brand-config';
 import { getUIMessageText } from '@/lib/get-ui-message-text';
 import Image from 'next/image';
@@ -171,7 +170,7 @@ export default function Home() {
   } = useChat({
     transport: new DefaultChatTransport({ api: '/api/chat' }),
     onError: (chatError) => {
-      console.error('[Rill chat]', chatError);
+      console.error('[chat]', chatError);
     },
   });
 
@@ -186,7 +185,7 @@ export default function Home() {
     clearError();
     void sendMessage({ text })
       .catch((submitError) => {
-        console.error('[Rill sendMessage]', submitError);
+        console.error('[sendMessage]', submitError);
       })
       .finally(() => {
         submittingRef.current = false;
@@ -379,21 +378,14 @@ export default function Home() {
                 <div
                   key={message.id}
                   className={`flex w-full min-w-0 ${
-                    message.role === 'user'
-                      ? 'justify-end'
-                      : 'items-start gap-3'
+                    message.role === 'user' ? 'justify-end' : 'justify-start'
                   }`}
                 >
-                  {message.role === 'assistant' ? (
-                    <div className="mt-0.5 shrink-0 overflow-visible">
-                      <RillAvatar size={26} />
-                    </div>
-                  ) : null}
                   <div
                     className={`min-w-0 break-words rounded-3xl px-5 py-3 text-sm leading-relaxed ${
                       message.role === 'user'
                         ? 'max-w-[85%] bg-zinc-800/90 text-zinc-100'
-                        : 'flex-1 text-zinc-200'
+                        : 'w-full max-w-full text-zinc-200'
                     }`}
                   >
                     {message.role === 'assistant' ? (
@@ -406,11 +398,8 @@ export default function Home() {
               ))}
 
               {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
-                <div className="flex w-full min-w-0 items-start gap-3">
-                  <div className="mt-0.5 shrink-0 overflow-visible">
-                    <RillAvatar size={26} />
-                  </div>
-                  <div className="flex min-w-0 flex-1 items-center gap-1.5 rounded-3xl px-2 py-3">
+                <div className="flex w-full min-w-0 justify-start">
+                  <div className="flex items-center gap-1.5 rounded-3xl px-5 py-3">
                     <span className="h-2 w-2 animate-bounce rounded-full bg-zinc-500 [animation-delay:-0.3s]" />
                     <span className="h-2 w-2 animate-bounce rounded-full bg-zinc-500 [animation-delay:-0.15s]" />
                     <span className="h-2 w-2 animate-bounce rounded-full bg-zinc-500" />
@@ -518,12 +507,6 @@ export default function Home() {
                   </IconButton>
                 )}
                 </div>
-
-                {showPromptHeading ? (
-                  <div className="shrink-0 overflow-visible">
-                    <RillAvatar size={40} />
-                  </div>
-                ) : null}
               </div>
 
               <p className="mt-3 text-center text-xs text-zinc-500">

@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { RillAvatar } from '@/components/rill-avatar';
 import { BRAND_FOOTER } from '@/lib/brand-config';
 import {
   parseAssistantMessage,
@@ -49,6 +50,9 @@ export function AssistantMessage({ content }: AssistantMessageProps) {
 
   return (
     <div className="min-w-0 break-words">
+      <div className="mb-3">
+        <RillAvatar size={22} />
+      </div>
       <div className="space-y-4">
         {blocks.map((block, index) => (
           <MessageBlock key={index} block={block} />
