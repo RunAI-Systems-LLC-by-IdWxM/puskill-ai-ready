@@ -12,7 +12,7 @@ type RillAvatarProps = {
 };
 
 export function RillAvatar({
-  size = 32,
+  size = 26,
   label = 'Rill',
   className,
   animated = true,

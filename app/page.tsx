@@ -386,7 +386,7 @@ export default function Home() {
                 >
                   {message.role === 'assistant' ? (
                     <div className="mt-0.5 shrink-0 overflow-visible">
-                      <RillAvatar size={32} />
+                      <RillAvatar size={26} />
                     </div>
                   ) : null}
                   <div
@@ -408,7 +408,7 @@ export default function Home() {
               {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
                 <div className="flex w-full min-w-0 items-start gap-3">
                   <div className="mt-0.5 shrink-0 overflow-visible">
-                    <RillAvatar size={32} />
+                    <RillAvatar size={26} />
                   </div>
                   <div className="flex min-w-0 flex-1 items-center gap-1.5 rounded-3xl px-2 py-3">
                     <span className="h-2 w-2 animate-bounce rounded-full bg-zinc-500 [animation-delay:-0.3s]" />
@@ -521,7 +521,7 @@ export default function Home() {
 
                 {showPromptHeading ? (
                   <div className="shrink-0 overflow-visible">
-                    <RillAvatar size={48} />
+                    <RillAvatar size={40} />
                   </div>
                 ) : null}
               </div>
